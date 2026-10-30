@@ -470,17 +470,15 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
       onKeyDown={onKeyDown}
       className="relative flex min-h-0 flex-1 flex-col outline-none"
     >
-      {/* 右上角浮动操作：不占列表空间，列表顶部留出 pt-11 让位 */}
-      <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-xl bg-hoverbg p-0.5 ring-1 ring-hairline backdrop-blur-md">
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          title="设置"
-          className="rounded-lg p-1.5 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
-        >
-          <Settings2 size={15} />
-        </button>
-      </div>
+      {/* 右上角设置：无背景，只有图标；列表顶部留出 pt-10 让位 */}
+      <button
+        type="button"
+        onClick={onOpenSettings}
+        title="设置"
+        className="absolute right-2 top-2 z-10 rounded-lg p-1.5 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
+      >
+        <Settings2 size={16} />
+      </button>
 
       {/* 列表 */}
       <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-3 pt-10">
