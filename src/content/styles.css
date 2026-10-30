@@ -30,8 +30,8 @@
   --tm-ink-500: 100 116 139;
   --tm-ink-300: 203 213 225;
 
-  --tm-surface: 255 255 255;
-  --tm-surface-a: 0.78;
+  --tm-surface: 252 252 253;
+  --tm-surface-a: 0.92;
 
   --tm-hairline: 15 23 42;
   --tm-hairline-a: 0.06;
@@ -42,6 +42,14 @@
 
   --tm-field: 15 23 42;
   --tm-field-a: 0.05;
+
+  /* 卡片底色：必须与面板底色拉开对比，否则卡片边界看不出来 */
+  --tm-card: 255 255 255;
+  --tm-card-a: 0.62;
+
+  /* 标签组容器底色：比面板略暗、比卡片暗，形成 面板 < 组 < 卡片 的层次 */
+  --tm-group: 15 23 42;
+  --tm-group-a: 0.055;
 
   --tm-ring: 255 255 255;
   --tm-ring-a: 0.6;
@@ -78,8 +86,8 @@
   --tm-ink-500: 148 163 184;
   --tm-ink-300: 100 116 139;
 
-  --tm-surface: 30 41 59;
-  --tm-surface-a: 0.88;
+  --tm-surface: 15 23 42;
+  --tm-surface-a: 0.94;
 
   --tm-hairline: 255 255 255;
   --tm-hairline-a: 0.09;
@@ -90,6 +98,12 @@
 
   --tm-field: 255 255 255;
   --tm-field-a: 0.07;
+
+  --tm-card: 255 255 255;
+  --tm-card-a: 0.055;
+
+  --tm-group: 255 255 255;
+  --tm-group-a: 0.042;
 
   --tm-ring: 255 255 255;
   --tm-ring-a: 0.14;

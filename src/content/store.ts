@@ -3,6 +3,7 @@ import {
   DEFAULT_SETTINGS,
   STORAGE_KEYS,
   type Settings,
+  type TabItem,
   type ThemeMode,
   type WindowGroup,
 } from '../shared/types';
@@ -29,7 +30,6 @@ type Store = {
   view: 'list' | 'settings';
   loading: boolean;
   groups: WindowGroup[];
-  query: string;
   /** 被折叠的窗口 id */
   collapsed: number[];
   /**
@@ -41,14 +41,17 @@ type Store = {
   settings: Settings;
   /** 设置是否已从 storage 读出来（避免首帧用默认值闪一下） */
   settingsReady: boolean;
+  /** url → bookmarkId，用于判断标签是否已收藏 */
+  bookmarks: Record<string, string>;
 
   setVisible: (v: boolean) => void;
   setView: (v: 'list' | 'settings') => void;
   setTheme: (t: ThemeMode) => void;
   loadSettings: () => Promise<void>;
+  loadBookmarks: () => Promise<void>;
+  toggleBookmark: (tab: TabItem) => Promise<void>;
   toggle: () => void;
   setGroups: (groups: WindowGroup[]) => void;
-  setQuery: (q: string) => void;
   toggleWindow: (windowId: number) => void;
   toggleGroup: (groupId: number, current: boolean) => void;
   refresh: () => Promise<void>;
@@ -62,22 +65,23 @@ export const useStore = create<Store>((set, get) => ({
   view: 'list',
   loading: false,
   groups: [],
-  query: '',
   collapsed: [],
   groupOverride: {},
   notice: null,
   settings: DEFAULT_SETTINGS,
   settingsReady: false,
+  bookmarks: {},
 
   setVisible(v) {
     set({ visible: v });
     if (v) {
       void safeSend({ type: 'PANEL_OPENED' });
       void get().refresh();
+      void get().loadBookmarks();
     } else {
       void safeSend({ type: 'PANEL_CLOSED' });
       // 关闭时重置临时状态，下次打开是干净的
-      set({ query: '', notice: null, view: 'list' });
+      set({ notice: null, view: 'list' });
     }
   },
 
@@ -101,16 +105,46 @@ export const useStore = create<Store>((set, get) => ({
     }
   },
 
+  async loadBookmarks() {
+    const res = await safeSend({ type: 'GET_BOOKMARKS' });
+    if (res.ok && res.bookmarks) set({ bookmarks: res.bookmarks });
+  },
+
+  async toggleBookmark(tab) {
+    const existing = get().bookmarks[tab.url];
+
+    // 已收藏 → 移除
+    if (existing) {
+      const res = await safeSend({ type: 'REMOVE_BOOKMARK', id: existing });
+      if (res.ok) {
+        const next = { ...get().bookmarks };
+        delete next[tab.url];
+        set({ bookmarks: next });
+      } else {
+        set({ notice: res.error });
+      }
+      return;
+    }
+
+    // 未收藏 → 添加
+    const res = await safeSend({
+      type: 'ADD_BOOKMARK',
+      url: tab.url,
+      title: tab.title || tab.url,
+    });
+    if (res.ok && res.bookmarkId) {
+      set({ bookmarks: { ...get().bookmarks, [tab.url]: res.bookmarkId } });
+    } else if (!res.ok) {
+      set({ notice: res.error });
+    }
+  },
+
   toggle() {
     get().setVisible(!get().visible);
   },
 
   setGroups(groups) {
     set({ groups, loading: false });
-  },
-
-  setQuery(q) {
-    set({ query: q });
   },
 
   toggleWindow(windowId) {

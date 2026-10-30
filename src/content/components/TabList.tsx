@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, Pin, Volume2, X, ChevronRight, Inbox, Settings2 } from 'lucide-react';
+import { Pin, Volume2, X, ChevronRight, Inbox, Settings2, Star } from 'lucide-react';
 import { useStore } from '../store';
 import {
   GROUP_COLOR_CLASS,
@@ -50,7 +50,7 @@ function Favicon({ tab }: { tab: TabItem }) {
   if (failed || !src) {
     return (
       <div
-        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded text-[9px] font-semibold ${colorOf(host)}`}
+        className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md text-[10px] font-semibold ${colorOf(host)}`}
         aria-hidden
       >
         {letter}
@@ -64,7 +64,7 @@ function Favicon({ tab }: { tab: TabItem }) {
       alt=""
       draggable={false}
       onError={() => setFailed(true)}
-      className="h-4 w-4 shrink-0 rounded-sm object-contain"
+      className="h-[18px] w-[18px] shrink-0 rounded object-contain"
     />
   );
 }
@@ -74,22 +74,19 @@ function Favicon({ tab }: { tab: TabItem }) {
 function TabRow({
   tab,
   highlighted,
-  indented,
-  groupColor,
   onHover,
   rowRef,
 }: {
   tab: TabItem;
   highlighted: boolean;
-  /** 属于某个标签组时缩进，视觉上从属于上面的组头 */
-  indented: boolean;
-  /** 组色，用来画左侧的从属竖线 */
-  groupColor?: string;
   onHover: () => void;
   rowRef: (el: HTMLDivElement | null) => void;
 }) {
   const activateTab = useStore((s) => s.activateTab);
   const closeTab = useStore((s) => s.closeTab);
+  const bookmarks = useStore((s) => s.bookmarks);
+  const toggleBookmark = useStore((s) => s.toggleBookmark);
+  const bookmarked = Boolean(bookmarks[tab.url]);
 
   return (
     <div
@@ -101,22 +98,32 @@ function TabRow({
       }}
       title={`${tab.title}\n${tab.url}`}
       className={[
-        'group relative flex h-9 cursor-pointer select-none items-center gap-2.5 pr-2 transition-colors duration-[250ms] ease-out',
-        indented ? 'pl-7' : 'pl-3',
-        highlighted ? 'bg-accentsoft' : 'hover:bg-hoverbg',
-        tab.active ? 'bg-accentsoft' : '',
+        'group relative mx-1 flex h-9 cursor-pointer select-none items-center gap-2.5 rounded-lg pl-2.5 pr-2 transition-colors duration-[250ms] ease-out',
+        tab.active
+          ? 'bg-accentsoft'
+          : highlighted
+            ? 'bg-accentsoft'
+            : 'hover:bg-hoverstrong',
       ].join(' ')}
     >
-      {/* 组内标签左侧的从属竖线，把整组框起来 */}
-      {indented && groupColor && (
-        <span
-          className={`pointer-events-none absolute bottom-0 left-[13px] top-0 w-[2px] rounded-full opacity-60 ${groupColor}`}
+      <button
+        type="button"
+        title={bookmarked ? '取消收藏' : '收藏此标签页'}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          void toggleBookmark(tab);
+        }}
+        className={[
+          '-ml-1 shrink-0 rounded p-1 transition hover:bg-hoverstrong',
+          bookmarked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+        ].join(' ')}
+      >
+        <Star
+          size={12}
+          className={bookmarked ? 'fill-amber-400 text-amber-400' : 'text-ink-500'}
         />
-      )}
-
-      {tab.active && (
-        <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-brand-500" />
-      )}
+      </button>
 
       <Favicon tab={tab} />
 
@@ -132,7 +139,7 @@ function TabRow({
       {tab.pinned && <Pin size={11} className="shrink-0 text-ink-500" />}
       {tab.audible && <Volume2 size={11} className="shrink-0 text-emerald-600" />}
 
-      <span className="shrink-0 max-w-[180px] truncate text-[11px] text-ink-500">
+      <span className="shrink-0 max-w-[200px] truncate text-[11px] text-ink-500">
         {hostOf(tab.url)}
       </span>
 
@@ -154,70 +161,82 @@ function TabRow({
 
 /* ---------- 行模型：把「组头」和「标签」摊平成一条序列 ---------- */
 
-type Row =
-  | { kind: 'group'; group: TabGroupInfo; count: number; total: number; collapsed: boolean }
-  | { kind: 'tab'; tab: TabItem; indented: boolean; groupColor?: string };
+type Block =
+  | {
+      kind: 'group';
+      group: TabGroupInfo;
+      count: number;
+      total: number;
+      collapsed: boolean;
+      tabs: TabItem[];
+    }
+  | { kind: 'tabs'; key: string; tabs: TabItem[] };
 
 /**
- * Chrome 的标签组一定是连续的（组不可被拆开），所以按 index 顺序扫一遍，
- * 遇到新的 groupId 就插一个组头即可。
+ * Chrome 的标签组一定是连续的（组不可被拆开），所以按 index 顺序扫一遍即可。
+ *
+ * 产出的不是"组头 + 散卡"的扁平序列，而是"组块 / 散卡块"两类区块：
+ * 组块自带容器，把组内卡片装进去；散卡块是连续的未分组标签。
+ * 这样组的边界由容器表达，而不是靠中间插一行标题。
  */
-function buildRows(
+function buildBlocks(
   tabs: TabItem[],
   groups: TabGroupInfo[],
   /** 搜索前的组大小，用来在组头显示「命中/总数」 */
   groupTotals: Map<number, number>,
   forceOpen: boolean,
   override: Record<number, boolean>,
-): Row[] {
+): Block[] {
   const infoById = new Map(groups.map((g) => [g.id, g]));
+  const blocks: Block[] = [];
+  let loose: TabItem[] = [];
+  let i = 0;
 
-  const counts = new Map<number, number>();
-  for (const t of tabs) {
-    if (t.groupId !== NO_GROUP) counts.set(t.groupId, (counts.get(t.groupId) ?? 0) + 1);
+  const flushLoose = () => {
+    if (loose.length) {
+      blocks.push({ kind: 'tabs', key: `loose-${loose[0].id}`, tabs: loose });
+      loose = [];
+    }
+  };
+
+  while (i < tabs.length) {
+    const t = tabs[i];
+
+    if (t.groupId === NO_GROUP) {
+      loose.push(t);
+      i++;
+      continue;
+    }
+
+    const gid = t.groupId;
+    const info = infoById.get(gid);
+
+    // 收集同组的连续标签
+    const groupTabs: TabItem[] = [];
+    while (i < tabs.length && tabs[i].groupId === gid) {
+      groupTabs.push(tabs[i]);
+      i++;
+    }
+
+    if (!info) {
+      // 组信息缺失（理论上不会发生），降级成普通卡片
+      loose.push(...groupTabs);
+      continue;
+    }
+
+    flushLoose();
+    blocks.push({
+      kind: 'group',
+      group: info,
+      count: groupTabs.length,
+      total: groupTotals.get(gid) ?? groupTabs.length,
+      collapsed: forceOpen ? false : (override[gid] ?? info.collapsed),
+      tabs: groupTabs,
+    });
   }
 
-  const rows: Row[] = [];
-  let lastGroup = NO_GROUP;
-  let collapsed = false;
-
-  for (const t of tabs) {
-    if (t.groupId !== lastGroup) {
-      if (t.groupId === NO_GROUP) {
-        collapsed = false;
-      } else {
-        const info = infoById.get(t.groupId);
-        if (info) {
-          const isCollapsed = forceOpen ? false : (override[t.groupId] ?? info.collapsed);
-          const count = counts.get(t.groupId) ?? 0;
-          rows.push({
-            kind: 'group',
-            group: info,
-            count,
-            total: groupTotals.get(t.groupId) ?? count,
-            collapsed: isCollapsed,
-          });
-          collapsed = isCollapsed;
-        } else {
-          collapsed = false;
-        }
-      }
-      lastGroup = t.groupId;
-    }
-    if (!collapsed) {
-      rows.push({
-        kind: 'tab',
-        tab: t,
-        indented: t.groupId !== NO_GROUP,
-        groupColor:
-          t.groupId !== NO_GROUP && infoById.get(t.groupId)
-            ? GROUP_COLOR_CLASS[infoById.get(t.groupId)!.color]
-            : undefined,
-      });
-    }
-  }
-
-  return rows;
+  flushLoose();
+  return blocks;
 }
 
 /* ---------- 窗口分组 ---------- */
@@ -225,7 +244,7 @@ function buildRows(
 function WindowSection({
   group,
   index,
-  rows,
+  blocks,
   totalCount,
   activeTitle,
   showHeader,
@@ -238,7 +257,7 @@ function WindowSection({
 }: {
   group: WindowGroup;
   index: number;
-  rows: Row[];
+  blocks: Block[];
   totalCount: number;
   activeTitle?: string;
   showHeader: boolean;
@@ -250,7 +269,11 @@ function WindowSection({
   onToggleGroup: (groupId: number, current: boolean) => void;
 }) {
   const open = !showHeader || !collapsed;
-  const shownTabs = rows.filter((r) => r.kind === 'tab').length;
+  // 折叠的组块里那些标签不算"可见"
+  const shownTabs = blocks.reduce(
+    (n, b) => n + (b.kind === 'tabs' || !b.collapsed ? b.tabs.length : 0),
+    0,
+  );
   const countLabel =
     shownTabs === totalCount ? `${totalCount} 个标签` : `${shownTabs}/${totalCount} 个标签`;
 
@@ -286,49 +309,69 @@ function WindowSection({
       )}
 
       {open && (
-        <div className="pb-1">
-          {rows.map((row) =>
-            row.kind === 'group' ? (
-              <button
-                key={`g-${row.group.id}`}
-                type="button"
-                onClick={() => onToggleGroup(row.group.id, row.collapsed)}
-                title={`标签组：${row.group.title || '未命名'}（点击折叠/展开）`}
-                className="mt-0.5 flex w-full items-center gap-2 px-3 py-1 text-left transition-colors duration-[250ms] ease-out hover:bg-hoverbg"
-              >
-                <span
-                  className={`h-3 w-[3px] shrink-0 rounded-full ${GROUP_COLOR_CLASS[row.group.color] ?? 'bg-slate-400'}`}
-                />
-                <span
-                  className={`min-w-0 flex-1 truncate text-[12px] font-medium ${
-                    row.group.title ? 'text-ink-700' : 'text-ink-500'
-                  }`}
-                >
-                  {row.group.title || '未命名组'}
-                </span>
-                <span className="shrink-0 text-[11px] tabular-nums text-ink-500">
-                  {row.count === row.total ? row.count : `${row.count}/${row.total}`}
-                </span>
-                <ChevronRight
-                  size={12}
-                  className={`shrink-0 text-ink-500 transition-transform ${row.collapsed ? '' : 'rotate-90'}`}
-                />
-              </button>
-            ) : (
+        <div className="flex flex-col gap-2 px-3 pb-2">
+          {blocks.map((block) => {
+            const renderTab = (tab: TabItem) => (
               <TabRow
-                key={row.tab.id}
-                tab={row.tab}
-                highlighted={highlightId === row.tab.id}
-                indented={row.indented}
-                groupColor={row.groupColor}
-                onHover={() => setHighlightId(row.tab.id)}
+                key={tab.id}
+                tab={tab}
+                highlighted={highlightId === tab.id}
+                onHover={() => setHighlightId(tab.id)}
                 rowRef={(el) => {
-                  if (el) rowRefs.current.set(row.tab.id, el);
-                  else rowRefs.current.delete(row.tab.id);
+                  if (el) rowRefs.current.set(tab.id, el);
+                  else rowRefs.current.delete(tab.id);
                 }}
               />
-            ),
-          )}
+            );
+
+            // 连续的未分组标签：直接铺在网格里
+            if (block.kind === 'tabs') {
+              return (
+                <div key={block.key} className="flex flex-col">
+                  {block.tabs.map(renderTab)}
+                </div>
+              );
+            }
+
+            // 标签组：独立容器，把组内卡片装进去，边界由容器表达
+            return (
+              <div
+                key={`g-${block.group.id}`}
+                className="rounded-xl bg-groupbg p-2 ring-1 ring-hairline"
+              >
+                <button
+                  type="button"
+                  onClick={() => onToggleGroup(block.group.id, block.collapsed)}
+                  title={`标签组：${block.group.title || '未命名'}（点击折叠/展开）`}
+                  className="mb-1.5 flex w-full items-center gap-2 rounded-lg py-0.5 text-left transition-colors duration-[250ms] ease-out hover:bg-hoverbg"
+                >
+                  <span
+                    className={`h-3 w-[3px] shrink-0 rounded-full ${GROUP_COLOR_CLASS[block.group.color] ?? 'bg-slate-400'}`}
+                  />
+                  <span
+                    className={`min-w-0 flex-1 truncate text-[12px] font-medium ${
+                      block.group.title ? 'text-ink-700' : 'text-ink-500'
+                    }`}
+                  >
+                    {block.group.title || '未命名组'}
+                  </span>
+                  <span className="shrink-0 text-[11px] tabular-nums text-ink-500">
+                    {block.count === block.total ? block.count : `${block.count}/${block.total}`}
+                  </span>
+                  <ChevronRight
+                    size={12}
+                    className={`shrink-0 text-ink-500 transition-transform ${block.collapsed ? '' : 'rotate-90'}`}
+                  />
+                </button>
+
+                {!block.collapsed && (
+                  <div className="flex flex-col">
+                    {block.tabs.map(renderTab)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </section>
@@ -346,8 +389,6 @@ export function TabList({
 }) {
   const groups = useStore((s) => s.groups);
   const loading = useStore((s) => s.loading);
-  const query = useStore((s) => s.query);
-  const setQuery = useStore((s) => s.setQuery);
   const collapsed = useStore((s) => s.collapsed);
   const groupOverride = useStore((s) => s.groupOverride);
   const toggleWindow = useStore((s) => s.toggleWindow);
@@ -356,52 +397,38 @@ export function TabList({
 
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const q = query.trim().toLowerCase();
-
-  // 搜索时把匹配的窗口和组都强制展开
-  const filtered = useMemo(() => {
-    if (!q) return groups;
-    return groups
-      .map((g) => ({
-        ...g,
-        tabs: g.tabs.filter(
-          (t) => t.title.toLowerCase().includes(q) || t.url.toLowerCase().includes(q),
-        ),
-      }))
-      .filter((g) => g.tabs.length > 0);
-  }, [groups, q]);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const sections = useMemo(
     () =>
-      filtered.map((group) => {
-        // 组的总数要从过滤前的数据算，否则搜索时组头只剩命中数
-        const original = groups.find((g) => g.windowId === group.windowId);
+      groups.map((group) => {
         const totals = new Map<number, number>();
-        for (const t of original?.tabs ?? []) {
+        for (const t of group.tabs) {
           if (t.groupId !== NO_GROUP) totals.set(t.groupId, (totals.get(t.groupId) ?? 0) + 1);
         }
         return {
           group,
-          rows: buildRows(group.tabs, group.groups, totals, Boolean(q), groupOverride),
+          blocks: buildBlocks(group.tabs, group.groups, totals, false, groupOverride),
         };
       }),
-    [filtered, groups, q, groupOverride],
+    [groups, groupOverride],
   );
 
   // 当前屏幕上真正可见的标签，键盘上下移动只在这上面走
   const visibleTabs = useMemo(() => {
     const out: TabItem[] = [];
-    for (const { group, rows } of sections) {
-      if (!q && collapsed.includes(group.windowId)) continue;
-      for (const r of rows) if (r.kind === 'tab') out.push(r.tab);
+    for (const { group, blocks } of sections) {
+      if (collapsed.includes(group.windowId)) continue;
+      for (const b of blocks) {
+        if (b.kind === 'tabs' || !b.collapsed) out.push(...b.tabs);
+      }
     }
     return out;
-  }, [sections, collapsed, q]);
+  }, [sections, collapsed]);
 
+  // 没有搜索框了，焦点放到面板根节点，↑↓ / Enter 才能收到
   useEffect(() => {
-    inputRef.current?.focus();
+    rootRef.current?.focus();
   }, []);
 
   useEffect(() => {
@@ -426,7 +453,7 @@ export function TabList({
     setHighlightId(visibleTabs[next].id);
   };
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       move(1);
@@ -443,85 +470,55 @@ export function TabList({
   };
 
   return (
-    <>
-      {/* 搜索 + 关闭：一行搞定，不占额外的标题栏 */}
-      <div className="flex shrink-0 items-center gap-1 border-b border-hairline px-4 py-2.5">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-fieldbg px-3 py-2 ring-1 ring-hairline transition-colors duration-[250ms] ease-out focus-within:ring-ink-500/45">
-          <Search size={14} className="shrink-0 text-ink-500" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="搜索标签页标题或网址…"
-            spellCheck={false}
-            className="min-w-0 flex-1 bg-transparent text-[13px] text-ink-900 placeholder:text-ink-500 focus:outline-none"
-          />
-          {query && (
-            <>
-              <span className="shrink-0 text-[11px] tabular-nums text-ink-500">
-                {visibleTabs.length} 条
-              </span>
-              <button
-                type="button"
-                onClick={() => setQuery('')}
-                className="shrink-0 rounded p-0.5 text-ink-500 hover:text-ink-900"
-                title="清空"
-              >
-                <X size={12} />
-              </button>
-            </>
-          )}
-        </div>
-
+    <div
+      ref={rootRef}
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      className="relative flex min-h-0 flex-1 flex-col outline-none"
+    >
+      {/* 右上角浮动操作：不占列表空间，列表顶部留出 pt-11 让位 */}
+      <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-xl bg-hoverbg p-0.5 ring-1 ring-hairline backdrop-blur-md">
         <button
           type="button"
           onClick={onOpenSettings}
           title="设置"
-          className="shrink-0 rounded-lg p-2 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
+          className="rounded-lg p-1.5 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
         >
           <Settings2 size={15} />
         </button>
-
         <button
           type="button"
           onClick={onClose}
           title="关闭 (Esc)"
-          className="shrink-0 rounded-lg p-2 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
+          className="rounded-lg p-1.5 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
         >
-          <X size={16} />
+          <X size={15} />
         </button>
       </div>
 
       {/* 列表 */}
-      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2">
+      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 pt-11">
         {loading && groups.length === 0 && (
           <div className="flex h-full items-center justify-center text-[13px] text-ink-500">
             正在读取标签页…
           </div>
         )}
 
-        {!loading && filtered.length === 0 && (
+        {!loading && groups.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-ink-500">
             <Inbox size={28} strokeWidth={1.5} />
-            <p className="text-[13px]">
-              {q ? `没有匹配 “${query.trim()}” 的标签页` : '当前没有打开的标签页'}
-            </p>
+            <p className="text-[13px]">当前没有打开的标签页</p>
           </div>
         )}
 
-        {sections.map(({ group, rows }) => (
+        {sections.map(({ group, blocks }) => (
           <WindowSection
             key={group.windowId}
             group={group}
             index={Math.max(0, groups.findIndex((g) => g.windowId === group.windowId))}
-            rows={rows}
-            totalCount={groups.find((g) => g.windowId === group.windowId)?.tabs.length ?? group.tabs.length}
-            activeTitle={
-              groups
-                .find((g) => g.windowId === group.windowId)
-                ?.tabs.find((t) => t.active)?.title || undefined
-            }
+            blocks={blocks}
+            totalCount={group.tabs.length}
+            activeTitle={group.tabs.find((t) => t.active)?.title || undefined}
             showHeader={groups.length > 1}
             collapsed={collapsed.includes(group.windowId)}
             onToggle={() => toggleWindow(group.windowId)}
@@ -532,6 +529,6 @@ export function TabList({
           />
         ))}
       </div>
-    </>
+    </div>
   );
 }
