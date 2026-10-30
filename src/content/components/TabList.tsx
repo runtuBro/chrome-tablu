@@ -101,8 +101,7 @@ function TabRow({
       }}
       title={`${tab.title}\n${tab.url}`}
       className={[
-        'group relative my-1 flex h-[52px] cursor-pointer select-none items-center gap-3 rounded-xl bg-cardbg px-3 ring-1 transition-all duration-[250ms] ease-out',
-        indented ? 'ml-6 mr-3' : 'mx-3',
+        'group relative flex h-16 cursor-pointer select-none flex-col justify-center gap-0.5 rounded-xl bg-cardbg px-3 ring-1 transition-all duration-[250ms] ease-out',
         tab.active
           ? 'bg-accentsoft ring-brand-500/40'
           : highlighted
@@ -110,30 +109,30 @@ function TabRow({
             : 'ring-hairline hover:ring-ink-500/20',
       ].join(' ')}
     >
-      {/* 组内标签左侧的从属竖线，把整组框起来 */}
-      {indented && groupColor && (
+      {/* 所属标签组的色条：网格布局下靠颜色标识归属，不做缩进 */}
+      {groupColor && (
         <span
-          className={`pointer-events-none absolute bottom-2 left-2 top-2 w-[2px] rounded-full opacity-60 ${groupColor}`}
+          className={`pointer-events-none absolute bottom-2.5 left-[3px] top-2.5 w-[2px] rounded-full opacity-70 ${groupColor}`}
         />
       )}
 
-      <Favicon tab={tab} />
+      <div className="flex min-w-0 items-center gap-2">
+        <Favicon tab={tab} />
+        <span
+          className={[
+            'min-w-0 flex-1 truncate text-[13px] leading-tight',
+            tab.active ? 'font-medium text-ink-900' : 'text-ink-700',
+          ].join(' ')}
+        >
+          {tab.title || hostOf(tab.url)}
+        </span>
+      </div>
 
-      <span
-        className={[
-          'min-w-0 flex-1 truncate text-[13px]',
-          tab.active ? 'font-medium text-ink-900' : 'text-ink-700',
-        ].join(' ')}
-      >
-        {tab.title || hostOf(tab.url)}
-      </span>
-
-      {tab.pinned && <Pin size={11} className="shrink-0 text-ink-500" />}
-      {tab.audible && <Volume2 size={11} className="shrink-0 text-emerald-600" />}
-
-      <span className="shrink-0 max-w-[180px] truncate text-[11px] text-ink-500">
-        {hostOf(tab.url)}
-      </span>
+      <div className="flex min-w-0 items-center gap-1.5 pl-[26px]">
+        <span className="min-w-0 truncate text-[11px] text-ink-500">{hostOf(tab.url)}</span>
+        {tab.pinned && <Pin size={10} className="shrink-0 text-ink-500" />}
+        {tab.audible && <Volume2 size={10} className="shrink-0 text-emerald-600" />}
+      </div>
 
       <button
         type="button"
@@ -143,7 +142,7 @@ function TabRow({
           e.preventDefault();
           void closeTab(tab.id);
         }}
-        className="ml-0.5 shrink-0 rounded p-1 text-ink-500 opacity-0 transition hover:bg-hoverstrong hover:text-ink-900 group-hover:opacity-100"
+        className="absolute right-1 top-1 rounded p-1 text-ink-500 opacity-0 transition hover:bg-hoverstrong hover:text-ink-900 group-hover:opacity-100"
       >
         <X size={12} />
       </button>
@@ -285,7 +284,10 @@ function WindowSection({
       )}
 
       {open && (
-        <div className="pb-1">
+        <div
+          className="grid gap-2 px-3 pb-2"
+          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(232px, 1fr))' }}
+        >
           {rows.map((row) =>
             row.kind === 'group' ? (
               <button
@@ -293,7 +295,7 @@ function WindowSection({
                 type="button"
                 onClick={() => onToggleGroup(row.group.id, row.collapsed)}
                 title={`标签组：${row.group.title || '未命名'}（点击折叠/展开）`}
-                className="mt-0.5 flex w-full items-center gap-2 px-3 py-1 text-left transition-colors duration-[250ms] ease-out hover:bg-hoverbg"
+                className="col-span-full mt-1 flex w-full items-center gap-2 rounded-lg px-1 py-1 text-left transition-colors duration-[250ms] ease-out hover:bg-hoverbg"
               >
                 <span
                   className={`h-3 w-[3px] shrink-0 rounded-full ${GROUP_COLOR_CLASS[row.group.color] ?? 'bg-slate-400'}`}
