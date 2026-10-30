@@ -52,8 +52,7 @@ const dict = {
     shortcutActive: '当前已生效',
     shortcutMissing: '未设置 · 可能与其他扩展或系统快捷键冲突',
     change: '修改',
-    shortcutHint:
-      '点击「修改」会打开 Chrome 自带的快捷键页面，在那里给 TabMind 指定组合键。扩展无法用代码设置自己的快捷键——这是 Chrome 的限制。',
+    shortcutHint: '点击「修改」会打开 Chrome 自带的快捷键页面，在那里给 TabMind 指定组合键。',
 
     // 关于
     about: '关于',
@@ -101,7 +100,7 @@ const dict = {
     shortcutMissing: 'Not set · may conflict with another extension or system shortcut',
     change: 'Change',
     shortcutHint:
-      'Click "Change" to open Chrome\'s shortcut page and assign a key combination. Extensions cannot set their own shortcuts in code — that\'s a Chrome restriction.',
+      'Click "Change" to open Chrome\'s shortcut page and assign a key combination.',
 
     about: 'About',
     privacy:
