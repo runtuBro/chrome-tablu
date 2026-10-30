@@ -101,7 +101,7 @@ function TabRow({
       }}
       title={`${tab.title}\n${tab.url}`}
       className={[
-        'group relative flex h-9 cursor-pointer select-none items-center gap-2.5 pr-2 transition-colors',
+        'group relative flex h-9 cursor-pointer select-none items-center gap-2.5 pr-2 transition-colors duration-[250ms] ease-out',
         indented ? 'pl-7' : 'pl-3',
         highlighted ? 'bg-accentsoft' : 'hover:bg-hoverbg',
         tab.active ? 'bg-accentsoft' : '',
@@ -260,7 +260,7 @@ function WindowSection({
         <button
           type="button"
           onClick={onToggle}
-          className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left transition-colors hover:bg-hoverbg"
+          className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left transition-colors duration-[250ms] ease-out hover:bg-hoverbg"
         >
           <ChevronRight
             size={13}
@@ -294,7 +294,7 @@ function WindowSection({
                 type="button"
                 onClick={() => onToggleGroup(row.group.id, row.collapsed)}
                 title={`标签组：${row.group.title || '未命名'}（点击折叠/展开）`}
-                className="mt-0.5 flex w-full items-center gap-2 px-3 py-1 text-left transition-colors hover:bg-hoverbg"
+                className="mt-0.5 flex w-full items-center gap-2 px-3 py-1 text-left transition-colors duration-[250ms] ease-out hover:bg-hoverbg"
               >
                 <span
                   className={`h-3 w-[3px] shrink-0 rounded-full ${GROUP_COLOR_CLASS[row.group.color] ?? 'bg-slate-400'}`}
@@ -446,7 +446,7 @@ export function TabList({
     <>
       {/* 搜索 + 关闭：一行搞定，不占额外的标题栏 */}
       <div className="flex shrink-0 items-center gap-1 border-b border-hairline px-4 py-2.5">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-fieldbg px-3 py-2 ring-1 ring-hairline transition-colors focus-within:ring-ink-500/45">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-fieldbg px-3 py-2 ring-1 ring-hairline transition-colors duration-[250ms] ease-out focus-within:ring-ink-500/45">
           <Search size={14} className="shrink-0 text-ink-500" />
           <input
             ref={inputRef}
