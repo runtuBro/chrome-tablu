@@ -316,7 +316,7 @@ function WindowSection({
                 key={tab.id}
                 tab={tab}
                 highlighted={highlightId === tab.id}
-                onHover={() => setHighlightId(tab.id)}
+                onHover={() => setHighlightId(null)}
                 rowRef={(el) => {
                   if (el) rowRefs.current.set(tab.id, el);
                   else rowRefs.current.delete(tab.id);
@@ -337,6 +337,7 @@ function WindowSection({
             return (
               <div
                 key={`g-${block.group.id}`}
+                data-group-id={block.group.id}
                 className="rounded-xl bg-groupbg p-2 ring-1 ring-hairline"
               >
                 <button
@@ -392,6 +393,7 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const rootRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const sections = useMemo(
     () =>
@@ -463,6 +465,26 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
     }
   };
 
+  // 顶部栏要展示所有窗口里出现过的标签组（按窗口顺序去重）
+  const allGroups = useMemo(() => {
+    const seen = new Set<number>();
+    const out: TabGroupInfo[] = [];
+    for (const { group } of sections) {
+      for (const g of group.groups) {
+        if (!seen.has(g.id)) {
+          seen.add(g.id);
+          out.push(g);
+        }
+      }
+    }
+    return out;
+  }, [sections]);
+
+  const scrollToGroup = (id: number) => {
+    const el = scrollRef.current?.querySelector(`[data-group-id="${id}"]`);
+    el?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+
   return (
     <div
       ref={rootRef}
@@ -470,21 +492,37 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
       onKeyDown={onKeyDown}
       className="relative flex min-h-0 flex-1 flex-col outline-none"
     >
-      {/* 右上角设置：无背景，只有图标；列表顶部留出 pt-10 让位 */}
-      <button
-        type="button"
-        onClick={onOpenSettings}
-        title="设置"
-        className="absolute right-1.5 top-1.5 z-10 rounded-lg p-1 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
-      >
-        <Settings2 size={16} />
-      </button>
+      {/* 顶部栏：标签组快捷定位 + 设置入口 */}
+      <header className="flex shrink-0 items-center gap-2 border-b border-hairline px-3 py-1.5">
+        <div className="tm-scroll flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+          {allGroups.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => scrollToGroup(g.id)}
+              title={`跳转到「${g.title || '未命名组'}」`}
+              className="flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-ink-700 transition hover:bg-hoverbg"
+            >
+              <span
+                className={`h-2 w-2 shrink-0 rounded-full ${GROUP_COLOR_CLASS[g.color] ?? 'bg-slate-400'}`}
+              />
+              <span className="max-w-[110px] truncate">{g.title || '未命名组'}</span>
+            </button>
+          ))}
+        </div>
 
-      {/* 顶部与列表的分割线：图标区与内容区的视觉边界 */}
-      <div className="mt-9 h-px shrink-0 bg-ink-500/15" />
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          title="设置"
+          className="shrink-0 rounded-lg p-1 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
+        >
+          <Settings2 size={16} />
+        </button>
+      </header>
 
       {/* 列表 */}
-      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 mt-2">
+      <div ref={scrollRef} className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 pt-2">
         {loading && groups.length === 0 && (
           <div className="flex h-full items-center justify-center text-[13px] text-ink-500">
             正在读取标签页…
