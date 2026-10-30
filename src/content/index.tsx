@@ -71,10 +71,7 @@ function boot(): void {
         store.setVisible(true);
         sendResponse({ ok: true });
         break;
-      case 'TABS_SNAPSHOT':
-        store.setGroups(msg.groups);
-        sendResponse({ ok: true });
-        break;
+      // 快照不走这条通道：面板打开后由 panelChannel 的长连接接收（见 store.setVisible）
     }
     return false;
   });

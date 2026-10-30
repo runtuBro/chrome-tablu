@@ -10,6 +10,7 @@ import {
   type ThemeMode,
   type WindowGroup,
 } from '../shared/types';
+import { connectPanelChannel, disconnectPanelChannel } from './panelChannel';
 import type { Request, Response } from '../shared/protocol';
 
 /** 扩展上下文失效（重新加载扩展、页面未刷新）时不要让 UI 直接崩掉 */
@@ -81,11 +82,11 @@ export const useStore = create<Store>((set, get) => ({
   setVisible(v) {
     set({ visible: v });
     if (v) {
-      void safeSend({ type: 'PANEL_OPENED' });
+      connectPanelChannel((groups) => set({ groups }));
       void get().refresh();
       void get().loadBookmarks();
     } else {
-      void safeSend({ type: 'PANEL_CLOSED' });
+      disconnectPanelChannel();
       // 关闭时重置临时状态，下次打开是干净的
       set({ notice: null, view: 'list' });
     }
