@@ -67,11 +67,9 @@ export function App() {
     if (visible) setNotice(null);
   }, [visible, setNotice]);
 
-  if (!visible) return null;
-
   return (
     <div
-      className="tm-overlay tm-anim animate-fadeIn"
+      className={`tm-overlay${visible ? ' is-open' : ''}`}
       data-theme={resolvedTheme}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) setVisible(false);
@@ -79,7 +77,7 @@ export function App() {
     >
       <div
         className={[
-          'tm-anim animate-panelIn tm-glass-sheen tm-panel flex w-[min(880px,92vw)] flex-col overflow-hidden rounded-xl bg-surface backdrop-blur-lg backdrop-saturate-150',
+          'tm-panel-anim tm-glass-sheen tm-panel flex w-[min(880px,92vw)] flex-col overflow-hidden rounded-xl bg-surface backdrop-blur-lg backdrop-saturate-150',
           heightMode === 'fixed'
             ? 'h-[min(660px,88vh)]'
             : 'max-h-[min(660px,88vh)] min-h-[200px]',

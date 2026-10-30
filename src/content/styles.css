@@ -76,7 +76,34 @@
   backdrop-filter: blur(10px) saturate(95%);
   -webkit-backdrop-filter: blur(10px) saturate(95%);
   overscroll-behavior: contain;
+
+  /* 默认态：关闭。visibility 延迟到透明度走完再隐藏，避免 backdrop-filter 常驻耗电 */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 120ms ease-in,
+    visibility 0s linear 120ms;
+}
+
+.tm-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transition:
+    opacity 160ms ease-out,
+    visibility 0s;
+}
+
+/* 面板本体：关闭时略下移并缩小，打开时回到原位 */
+.tm-panel-anim {
+  transform: translateY(8px) scale(0.985);
+  transition: transform 120ms ease-in;
+}
+
+.tm-overlay.is-open .tm-panel-anim {
+  transform: translateY(0) scale(1);
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 深色：面板换成深色半透明，遮罩更深，让面板浮起来 */
@@ -186,5 +213,9 @@
 @media (prefers-reduced-motion: reduce) {
   .tm-anim {
     animation: none !important;
+  }
+  .tm-overlay,
+  .tm-panel-anim {
+    transition: none !important;
   }
 }
