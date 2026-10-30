@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "TabMind · 标签页总览",
-  "version": "0.8.1",
+  "name": "TabMind",
+  "version": "0.8.2",
   "description": "一键纵览所有窗口与标签页，点一下即可跳转。",
   "minimum_chrome_version": "110",
   "permissions": ["tabs", "windows", "favicon", "scripting", "activeTab", "tabGroups", "storage", "bookmarks"],
