@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Shadow DOM 内的样式基线。
+   host 元素本身的定位由 index.tsx 的 inline style 负责，
+   这里只定义继承下去的文字与盒模型基线。 */
+:host {
+  display: block;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ------------------------------------------------------------------ *
+ * 主题变量
+ *
+ * 颜色全部走变量，组件里只写语义类名（bg-surface / text-ink-500 /
+ * border-hairline）。切主题 = 换一组变量值，组件代码一行都不用改。
+ * 变量挂在 .tm-overlay 上而不是 :host，因为遮罩自身的背景也要跟着变。
+ * ------------------------------------------------------------------ */
+
+.tm-overlay {
+  /* 浅色（默认） */
+  --tm-ink-900: 15 23 42;
+  --tm-ink-700: 51 65 85;
+  --tm-ink-500: 100 116 139;
+  --tm-ink-300: 203 213 225;
+
+  --tm-surface: 255 255 255;
+  --tm-surface-a: 0.78;
+
+  --tm-hairline: 15 23 42;
+  --tm-hairline-a: 0.06;
+
+  --tm-hover: 15 23 42;
+  --tm-hover-a: 0.04;
+  --tm-hover-strong-a: 0.09;
+
+  --tm-field: 15 23 42;
+  --tm-field-a: 0.05;
+
+  --tm-ring: 255 255 255;
+  --tm-ring-a: 0.6;
+
+  --tm-accent-soft: 99 102 241;
+  --tm-accent-soft-a: 0.1;
+
+  --tm-overlay-bg: 15 23 42;
+  --tm-overlay-a: 0.35;
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(var(--tm-overlay-bg) / var(--tm-overlay-a));
+  backdrop-filter: blur(4px) saturate(95%);
+  -webkit-backdrop-filter: blur(4px) saturate(95%);
+  overscroll-behavior: contain;
+  pointer-events: auto;
+}
+
+/* 深色：面板换成深色半透明，遮罩更深，让面板浮起来 */
+.tm-overlay[data-theme='dark'] {
+  --tm-ink-900: 241 245 249;
+  --tm-ink-700: 203 213 225;
+  --tm-ink-500: 148 163 184;
+  --tm-ink-300: 100 116 139;
+
+  --tm-surface: 30 41 59;
+  --tm-surface-a: 0.88;
+
+  --tm-hairline: 255 255 255;
+  --tm-hairline-a: 0.09;
+
+  --tm-hover: 255 255 255;
+  --tm-hover-a: 0.06;
+  --tm-hover-strong-a: 0.14;
+
+  --tm-field: 255 255 255;
+  --tm-field-a: 0.07;
+
+  --tm-ring: 255 255 255;
+  --tm-ring-a: 0.14;
+
+  --tm-accent-soft: 129 140 248;
+  --tm-accent-soft-a: 0.2;
+
+  --tm-overlay-bg: 2 6 23;
+  --tm-overlay-a: 0.62;
+
+  backdrop-filter: blur(4px) saturate(85%) brightness(0.8);
+  -webkit-backdrop-filter: blur(4px) saturate(85%) brightness(0.8);
+}
+
+/* 面板上沿的一道高光，玻璃质感靠它撑起来 */
+.tm-glass-sheen {
+  position: relative;
+}
+
+.tm-glass-sheen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.05) 20%,
+    rgba(255, 255, 255, 0) 45%
+  );
+}
+
+/* 深色下顶部不该有一道白光，换成极淡的亮部，只保留一点体积感 */
+.tm-overlay[data-theme='dark'] .tm-glass-sheen::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.07) 0%,
+    rgba(255, 255, 255, 0.02) 25%,
+    rgba(255, 255, 255, 0) 50%
+  );
+}
+
+.tm-scroll {
+  overscroll-behavior: contain;
+}
+
+.tm-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tm-scroll::-webkit-scrollbar-thumb {
+  background: rgb(var(--tm-ink-300) / 0.8);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.tm-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--tm-ink-500) / 0.9);
+  background-clip: content-box;
+}
+
+.tm-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-anim {
+    animation: none !important;
+  }
+}
