@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, Pin, Volume2, X, ChevronRight, Inbox, Settings2, Star } from 'lucide-react';
+import { Pin, Volume2, X, ChevronRight, Inbox, Settings2, Star } from 'lucide-react';
 import { useStore } from '../store';
 import {
   GROUP_COLOR_CLASS,
@@ -389,8 +389,6 @@ export function TabList({
 }) {
   const groups = useStore((s) => s.groups);
   const loading = useStore((s) => s.loading);
-  const query = useStore((s) => s.query);
-  const setQuery = useStore((s) => s.setQuery);
   const collapsed = useStore((s) => s.collapsed);
   const groupOverride = useStore((s) => s.groupOverride);
   const toggleWindow = useStore((s) => s.toggleWindow);
@@ -399,54 +397,38 @@ export function TabList({
 
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const q = query.trim().toLowerCase();
-
-  // 搜索时把匹配的窗口和组都强制展开
-  const filtered = useMemo(() => {
-    if (!q) return groups;
-    return groups
-      .map((g) => ({
-        ...g,
-        tabs: g.tabs.filter(
-          (t) => t.title.toLowerCase().includes(q) || t.url.toLowerCase().includes(q),
-        ),
-      }))
-      .filter((g) => g.tabs.length > 0);
-  }, [groups, q]);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const sections = useMemo(
     () =>
-      filtered.map((group) => {
-        // 组的总数要从过滤前的数据算，否则搜索时组头只剩命中数
-        const original = groups.find((g) => g.windowId === group.windowId);
+      groups.map((group) => {
         const totals = new Map<number, number>();
-        for (const t of original?.tabs ?? []) {
+        for (const t of group.tabs) {
           if (t.groupId !== NO_GROUP) totals.set(t.groupId, (totals.get(t.groupId) ?? 0) + 1);
         }
         return {
           group,
-          blocks: buildBlocks(group.tabs, group.groups, totals, Boolean(q), groupOverride),
+          blocks: buildBlocks(group.tabs, group.groups, totals, false, groupOverride),
         };
       }),
-    [filtered, groups, q, groupOverride],
+    [groups, groupOverride],
   );
 
   // 当前屏幕上真正可见的标签，键盘上下移动只在这上面走
   const visibleTabs = useMemo(() => {
     const out: TabItem[] = [];
     for (const { group, blocks } of sections) {
-      if (!q && collapsed.includes(group.windowId)) continue;
+      if (collapsed.includes(group.windowId)) continue;
       for (const b of blocks) {
         if (b.kind === 'tabs' || !b.collapsed) out.push(...b.tabs);
       }
     }
     return out;
-  }, [sections, collapsed, q]);
+  }, [sections, collapsed]);
 
+  // 没有搜索框了，焦点放到面板根节点，↑↓ / Enter 才能收到
   useEffect(() => {
-    inputRef.current?.focus();
+    rootRef.current?.focus();
   }, []);
 
   useEffect(() => {
@@ -471,7 +453,7 @@ export function TabList({
     setHighlightId(visibleTabs[next].id);
   };
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       move(1);
@@ -488,70 +470,44 @@ export function TabList({
   };
 
   return (
-    <>
-      {/* 搜索 + 关闭：一行搞定，不占额外的标题栏 */}
-      <div className="flex shrink-0 items-center gap-1 border-b border-hairline px-4 py-2.5">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-fieldbg px-3 py-2 ring-1 ring-hairline transition-colors duration-[250ms] ease-out focus-within:ring-ink-500/45">
-          <Search size={14} className="shrink-0 text-ink-500" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="搜索标签页标题或网址…"
-            spellCheck={false}
-            className="min-w-0 flex-1 bg-transparent text-[13px] text-ink-900 placeholder:text-ink-500 focus:outline-none"
-          />
-          {query && (
-            <>
-              <span className="shrink-0 text-[11px] tabular-nums text-ink-500">
-                {visibleTabs.length} 条
-              </span>
-              <button
-                type="button"
-                onClick={() => setQuery('')}
-                className="shrink-0 rounded p-0.5 text-ink-500 hover:text-ink-900"
-                title="清空"
-              >
-                <X size={12} />
-              </button>
-            </>
-          )}
-        </div>
-
+    <div
+      ref={rootRef}
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      className="relative flex min-h-0 flex-1 flex-col outline-none"
+    >
+      {/* 右上角浮动操作：不占列表空间，列表顶部留出 pt-11 让位 */}
+      <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-xl bg-surface/80 p-0.5 ring-1 ring-hairline backdrop-blur-md">
         <button
           type="button"
           onClick={onOpenSettings}
           title="设置"
-          className="shrink-0 rounded-lg p-2 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
+          className="rounded-lg p-1.5 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
         >
           <Settings2 size={15} />
         </button>
-
         <button
           type="button"
           onClick={onClose}
           title="关闭 (Esc)"
-          className="shrink-0 rounded-lg p-2 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
+          className="rounded-lg p-1.5 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
         >
-          <X size={16} />
+          <X size={15} />
         </button>
       </div>
 
       {/* 列表 */}
-      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 pt-2">
+      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 pt-11">
         {loading && groups.length === 0 && (
           <div className="flex h-full items-center justify-center text-[13px] text-ink-500">
             正在读取标签页…
           </div>
         )}
 
-        {!loading && filtered.length === 0 && (
+        {!loading && groups.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-ink-500">
             <Inbox size={28} strokeWidth={1.5} />
-            <p className="text-[13px]">
-              {q ? `没有匹配 “${query.trim()}” 的标签页` : '当前没有打开的标签页'}
-            </p>
+            <p className="text-[13px]">当前没有打开的标签页</p>
           </div>
         )}
 
@@ -561,12 +517,8 @@ export function TabList({
             group={group}
             index={Math.max(0, groups.findIndex((g) => g.windowId === group.windowId))}
             blocks={blocks}
-            totalCount={groups.find((g) => g.windowId === group.windowId)?.tabs.length ?? group.tabs.length}
-            activeTitle={
-              groups
-                .find((g) => g.windowId === group.windowId)
-                ?.tabs.find((t) => t.active)?.title || undefined
-            }
+            totalCount={group.tabs.length}
+            activeTitle={group.tabs.find((t) => t.active)?.title || undefined}
             showHeader={groups.length > 1}
             collapsed={collapsed.includes(group.windowId)}
             onToggle={() => toggleWindow(group.windowId)}
@@ -577,6 +529,6 @@ export function TabList({
           />
         ))}
       </div>
-    </>
+    </div>
   );
 }

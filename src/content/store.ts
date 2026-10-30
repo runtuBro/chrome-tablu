@@ -30,7 +30,6 @@ type Store = {
   view: 'list' | 'settings';
   loading: boolean;
   groups: WindowGroup[];
-  query: string;
   /** 被折叠的窗口 id */
   collapsed: number[];
   /**
@@ -53,7 +52,6 @@ type Store = {
   toggleBookmark: (tab: TabItem) => Promise<void>;
   toggle: () => void;
   setGroups: (groups: WindowGroup[]) => void;
-  setQuery: (q: string) => void;
   toggleWindow: (windowId: number) => void;
   toggleGroup: (groupId: number, current: boolean) => void;
   refresh: () => Promise<void>;
@@ -67,7 +65,6 @@ export const useStore = create<Store>((set, get) => ({
   view: 'list',
   loading: false,
   groups: [],
-  query: '',
   collapsed: [],
   groupOverride: {},
   notice: null,
@@ -84,7 +81,7 @@ export const useStore = create<Store>((set, get) => ({
     } else {
       void safeSend({ type: 'PANEL_CLOSED' });
       // 关闭时重置临时状态，下次打开是干净的
-      set({ query: '', notice: null, view: 'list' });
+      set({ notice: null, view: 'list' });
     }
   },
 
@@ -148,10 +145,6 @@ export const useStore = create<Store>((set, get) => ({
 
   setGroups(groups) {
     set({ groups, loading: false });
-  },
-
-  setQuery(q) {
-    set({ query: q });
   },
 
   toggleWindow(windowId) {
