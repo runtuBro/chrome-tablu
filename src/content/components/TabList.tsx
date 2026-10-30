@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, Pin, Volume2, X, ChevronRight, Inbox, Settings2 } from 'lucide-react';
+import { Search, Pin, Volume2, X, ChevronRight, Inbox, Settings2, Star } from 'lucide-react';
 import { useStore } from '../store';
 import {
   GROUP_COLOR_CLASS,
@@ -84,6 +84,9 @@ function TabRow({
 }) {
   const activateTab = useStore((s) => s.activateTab);
   const closeTab = useStore((s) => s.closeTab);
+  const bookmarks = useStore((s) => s.bookmarks);
+  const toggleBookmark = useStore((s) => s.toggleBookmark);
+  const bookmarked = Boolean(bookmarks[tab.url]);
 
   return (
     <div
@@ -120,6 +123,25 @@ function TabRow({
       <span className="shrink-0 max-w-[200px] truncate text-[11px] text-ink-500">
         {hostOf(tab.url)}
       </span>
+
+      <button
+        type="button"
+        title={bookmarked ? '取消收藏' : '收藏此标签页'}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          void toggleBookmark(tab);
+        }}
+        className={[
+          'shrink-0 rounded p-1 transition hover:bg-hoverstrong',
+          bookmarked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+        ].join(' ')}
+      >
+        <Star
+          size={12}
+          className={bookmarked ? 'fill-amber-400 text-amber-400' : 'text-ink-500'}
+        />
+      </button>
 
       <button
         type="button"

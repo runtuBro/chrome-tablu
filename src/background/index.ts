@@ -270,6 +270,30 @@ async function handleRequest(
       await chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
       return { ok: true };
 
+    case 'GET_BOOKMARKS': {
+      // 一次性拉全量书签并压成 url → id 的映射，避免每行单独查询
+      const tree = await chrome.bookmarks.getTree();
+      const map: Record<string, string> = {};
+      const walk = (nodes: chrome.bookmarks.BookmarkTreeNode[]) => {
+        for (const n of nodes) {
+          if (n.url && !map[n.url]) map[n.url] = n.id;
+          if (n.children?.length) walk(n.children);
+        }
+      };
+      walk(tree);
+      return { ok: true, bookmarks: map };
+    }
+
+    case 'ADD_BOOKMARK': {
+      // 不指定 parentId 时 Chrome 默认放到「其他书签」
+      const node = await chrome.bookmarks.create({ title: msg.title, url: msg.url });
+      return { ok: true, bookmarkId: node.id };
+    }
+
+    case 'REMOVE_BOOKMARK':
+      await chrome.bookmarks.remove(msg.id);
+      return { ok: true };
+
     default:
       return { ok: false, error: '未知的请求类型' };
   }

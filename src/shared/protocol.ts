@@ -13,10 +13,20 @@ export type Request =
   | { type: 'PANEL_OPENED' }
   | { type: 'PANEL_CLOSED' }
   | { type: 'GET_SHORTCUT' }
-  | { type: 'OPEN_SHORTCUTS_PAGE' };
+  | { type: 'OPEN_SHORTCUTS_PAGE' }
+  | { type: 'GET_BOOKMARKS' }
+  | { type: 'ADD_BOOKMARK'; url: string; title: string }
+  | { type: 'REMOVE_BOOKMARK'; id: string };
 
 export type Response =
-  | { ok: true; groups?: WindowGroup[]; shortcut?: string }
+  | {
+      ok: true;
+      groups?: WindowGroup[];
+      shortcut?: string;
+      /** url → bookmarkId 的映射，用于判断某标签是否已收藏 */
+      bookmarks?: Record<string, string>;
+      bookmarkId?: string;
+    }
   | { ok: false; error: string };
 
 /* ---------- background → content（广播 / 指令） ---------- */
