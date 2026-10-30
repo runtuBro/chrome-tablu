@@ -446,7 +446,7 @@ export function TabList({
     <>
       {/* 搜索 + 关闭：一行搞定，不占额外的标题栏 */}
       <div className="flex shrink-0 items-center gap-1 border-b border-hairline px-4 py-2.5">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-fieldbg px-3 py-2 transition-colors focus-within:ring-1 focus-within:ring-brand-500/30">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-fieldbg px-3 py-2 ring-1 ring-hairline transition-colors focus-within:ring-ink-500/45">
           <Search size={14} className="shrink-0 text-ink-500" />
           <input
             ref={inputRef}

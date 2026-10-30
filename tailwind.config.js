@@ -28,10 +28,6 @@ export default {
           700: '#4338ca',
         },
       },
-      boxShadow: {
-        panel:
-          '0 24px 60px -12px rgba(0, 0, 0, 0.35), 0 8px 24px -8px rgba(0, 0, 0, 0.2)',
-      },
       keyframes: {
         panelIn: {
           from: { opacity: '0', transform: 'translateY(10px) scale(0.985)' },
