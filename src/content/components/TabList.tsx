@@ -50,7 +50,7 @@ function Favicon({ tab }: { tab: TabItem }) {
   if (failed || !src) {
     return (
       <div
-        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded text-[9px] font-semibold ${colorOf(host)}`}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold ${colorOf(host)}`}
         aria-hidden
       >
         {letter}
@@ -64,7 +64,7 @@ function Favicon({ tab }: { tab: TabItem }) {
       alt=""
       draggable={false}
       onError={() => setFailed(true)}
-      className="h-4 w-4 shrink-0 rounded-sm object-contain"
+      className="h-5 w-5 shrink-0 rounded object-contain"
     />
   );
 }
@@ -101,21 +101,20 @@ function TabRow({
       }}
       title={`${tab.title}\n${tab.url}`}
       className={[
-        'group relative flex h-9 cursor-pointer select-none items-center gap-2.5 pr-2 transition-colors duration-[250ms] ease-out',
-        indented ? 'pl-7' : 'pl-3',
-        highlighted ? 'bg-accentsoft' : 'hover:bg-hoverbg',
-        tab.active ? 'bg-accentsoft' : '',
+        'group relative my-1 flex h-[52px] cursor-pointer select-none items-center gap-3 rounded-xl bg-cardbg px-3 ring-1 transition-all duration-[250ms] ease-out',
+        indented ? 'ml-6 mr-3' : 'mx-3',
+        tab.active
+          ? 'bg-accentsoft ring-brand-500/40'
+          : highlighted
+            ? 'ring-ink-500/30'
+            : 'ring-hairline hover:ring-ink-500/20',
       ].join(' ')}
     >
       {/* 组内标签左侧的从属竖线，把整组框起来 */}
       {indented && groupColor && (
         <span
-          className={`pointer-events-none absolute bottom-0 left-[13px] top-0 w-[2px] rounded-full opacity-60 ${groupColor}`}
+          className={`pointer-events-none absolute bottom-2 left-2 top-2 w-[2px] rounded-full opacity-60 ${groupColor}`}
         />
-      )}
-
-      {tab.active && (
-        <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-brand-500" />
       )}
 
       <Favicon tab={tab} />
