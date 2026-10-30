@@ -475,13 +475,13 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
         type="button"
         onClick={onOpenSettings}
         title="设置"
-        className="absolute right-2 top-2 z-10 rounded-lg p-1.5 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
+        className="absolute right-1.5 top-1.5 z-10 rounded-lg p-1 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
       >
         <Settings2 size={16} />
       </button>
 
       {/* 列表 */}
-      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-3 pt-10">
+      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 mt-8">
         {loading && groups.length === 0 && (
           <div className="flex h-full items-center justify-center text-[13px] text-ink-500">
             正在读取标签页…
