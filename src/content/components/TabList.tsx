@@ -95,7 +95,7 @@ function TabRow({
       }}
       title={`${tab.title}\n${tab.url}`}
       className={[
-        'group relative flex h-9 cursor-pointer select-none items-center gap-2.5 pl-3 pr-2 transition-colors duration-[250ms] ease-out',
+        'group relative mx-1 flex h-9 cursor-pointer select-none items-center gap-2.5 rounded-lg pl-2.5 pr-2 transition-colors duration-[250ms] ease-out',
         tab.active
           ? 'bg-accentsoft'
           : highlighted
