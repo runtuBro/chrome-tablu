@@ -106,6 +106,25 @@ function TabRow({
             : 'hover:bg-hoverstrong',
       ].join(' ')}
     >
+      <button
+        type="button"
+        title={bookmarked ? '取消收藏' : '收藏此标签页'}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          void toggleBookmark(tab);
+        }}
+        className={[
+          '-ml-1 shrink-0 rounded p-1 transition hover:bg-hoverstrong',
+          bookmarked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+        ].join(' ')}
+      >
+        <Star
+          size={12}
+          className={bookmarked ? 'fill-amber-400 text-amber-400' : 'text-ink-500'}
+        />
+      </button>
+
       <Favicon tab={tab} />
 
       <span
@@ -123,25 +142,6 @@ function TabRow({
       <span className="shrink-0 max-w-[200px] truncate text-[11px] text-ink-500">
         {hostOf(tab.url)}
       </span>
-
-      <button
-        type="button"
-        title={bookmarked ? '取消收藏' : '收藏此标签页'}
-        onMouseDown={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          void toggleBookmark(tab);
-        }}
-        className={[
-          'shrink-0 rounded p-1 transition hover:bg-hoverstrong',
-          bookmarked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
-        ].join(' ')}
-      >
-        <Star
-          size={12}
-          className={bookmarked ? 'fill-amber-400 text-amber-400' : 'text-ink-500'}
-        />
-      </button>
 
       <button
         type="button"
