@@ -95,7 +95,7 @@ function TabRow({
       }}
       title={`${tab.title}\n${tab.url}`}
       className={[
-        'group relative flex h-16 cursor-pointer select-none flex-col justify-center gap-0.5 rounded-xl bg-cardbg px-2.5 ring-1 transition-all duration-[250ms] ease-out',
+        'group relative flex h-[52px] cursor-pointer select-none items-center gap-3 rounded-xl bg-cardbg px-3 ring-1 transition-all duration-[250ms] ease-out',
         tab.active
           ? 'bg-accentsoft ring-brand-500/40'
           : highlighted
@@ -103,24 +103,23 @@ function TabRow({
             : 'ring-hairline hover:ring-ink-500/20',
       ].join(' ')}
     >
-      {/* 所属标签组的色条：网格布局下靠颜色标识归属，不做缩进 */}
-      <div className="flex min-w-0 items-center gap-1.5">
-        <Favicon tab={tab} />
-        <span
-          className={[
-            'min-w-0 flex-1 truncate text-[13px] leading-tight',
-            tab.active ? 'font-medium text-ink-900' : 'text-ink-700',
-          ].join(' ')}
-        >
-          {tab.title || hostOf(tab.url)}
-        </span>
-      </div>
+      <Favicon tab={tab} />
 
-      <div className="flex min-w-0 items-center gap-1.5 pl-[24px]">
-        <span className="min-w-0 truncate text-[11px] text-ink-500">{hostOf(tab.url)}</span>
-        {tab.pinned && <Pin size={10} className="shrink-0 text-ink-500" />}
-        {tab.audible && <Volume2 size={10} className="shrink-0 text-emerald-600" />}
-      </div>
+      <span
+        className={[
+          'min-w-0 flex-1 truncate text-[13px]',
+          tab.active ? 'font-medium text-ink-900' : 'text-ink-700',
+        ].join(' ')}
+      >
+        {tab.title || hostOf(tab.url)}
+      </span>
+
+      {tab.pinned && <Pin size={11} className="shrink-0 text-ink-500" />}
+      {tab.audible && <Volume2 size={11} className="shrink-0 text-emerald-600" />}
+
+      <span className="shrink-0 max-w-[200px] truncate text-[11px] text-ink-500">
+        {hostOf(tab.url)}
+      </span>
 
       <button
         type="button"
@@ -130,7 +129,7 @@ function TabRow({
           e.preventDefault();
           void closeTab(tab.id);
         }}
-        className="absolute right-1 top-1 rounded p-1 text-ink-500 opacity-0 transition hover:bg-hoverstrong hover:text-ink-900 group-hover:opacity-100"
+        className="shrink-0 rounded p-1 text-ink-500 opacity-0 transition hover:bg-hoverstrong hover:text-ink-900 group-hover:opacity-100"
       >
         <X size={12} />
       </button>
@@ -220,11 +219,6 @@ function buildBlocks(
 
 /* ---------- 窗口分组 ---------- */
 
-/** 卡片网格：880px 面板下稳定排 4 列，面板变宽会自动增加列数 */
-const GRID_STYLE: React.CSSProperties = {
-  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-};
-
 function WindowSection({
   group,
   index,
@@ -311,7 +305,7 @@ function WindowSection({
             // 连续的未分组标签：直接铺在网格里
             if (block.kind === 'tabs') {
               return (
-                <div key={block.key} className="grid gap-2" style={GRID_STYLE}>
+                <div key={block.key} className="flex flex-col gap-1.5">
                   {block.tabs.map(renderTab)}
                 </div>
               );
@@ -349,7 +343,7 @@ function WindowSection({
                 </button>
 
                 {!block.collapsed && (
-                  <div className="grid gap-2" style={GRID_STYLE}>
+                  <div className="flex flex-col gap-1.5">
                     {block.tabs.map(renderTab)}
                   </div>
                 )}
