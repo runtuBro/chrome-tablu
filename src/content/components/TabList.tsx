@@ -477,7 +477,7 @@ export function TabList({
       className="relative flex min-h-0 flex-1 flex-col outline-none"
     >
       {/* 右上角浮动操作：不占列表空间，列表顶部留出 pt-11 让位 */}
-      <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-xl bg-surface/80 p-0.5 ring-1 ring-hairline backdrop-blur-md">
+      <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-xl bg-hoverbg p-0.5 ring-1 ring-hairline backdrop-blur-md">
         <button
           type="button"
           onClick={onOpenSettings}

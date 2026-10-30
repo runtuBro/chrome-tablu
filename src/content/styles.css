@@ -30,8 +30,8 @@
   --tm-ink-500: 100 116 139;
   --tm-ink-300: 203 213 225;
 
-  --tm-surface: 255 255 255;
-  --tm-surface-a: 0.78;
+  --tm-surface: 252 252 253;
+  --tm-surface-a: 0.92;
 
   --tm-hairline: 15 23 42;
   --tm-hairline-a: 0.06;
@@ -86,8 +86,8 @@
   --tm-ink-500: 148 163 184;
   --tm-ink-300: 100 116 139;
 
-  --tm-surface: 30 41 59;
-  --tm-surface-a: 0.88;
+  --tm-surface: 15 23 42;
+  --tm-surface-a: 0.94;
 
   --tm-hairline: 255 255 255;
   --tm-hairline-a: 0.09;
