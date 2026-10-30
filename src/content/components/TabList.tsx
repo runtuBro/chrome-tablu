@@ -95,12 +95,12 @@ function TabRow({
       }}
       title={`${tab.title}\n${tab.url}`}
       className={[
-        'group relative flex h-[52px] cursor-pointer select-none items-center gap-3 rounded-xl bg-cardbg px-3 ring-1 transition-all duration-[250ms] ease-out',
+        'group relative flex h-9 cursor-pointer select-none items-center gap-2.5 pl-3 pr-2 transition-colors duration-[250ms] ease-out',
         tab.active
-          ? 'bg-accentsoft ring-brand-500/40'
+          ? 'bg-accentsoft'
           : highlighted
-            ? 'ring-ink-500/30'
-            : 'ring-hairline hover:ring-ink-500/20',
+            ? 'bg-accentsoft'
+            : 'hover:bg-hoverstrong',
       ].join(' ')}
     >
       <Favicon tab={tab} />
@@ -129,7 +129,7 @@ function TabRow({
           e.preventDefault();
           void closeTab(tab.id);
         }}
-        className="shrink-0 rounded p-1 text-ink-500 opacity-0 transition hover:bg-hoverstrong hover:text-ink-900 group-hover:opacity-100"
+        className="ml-0.5 shrink-0 rounded p-1 text-ink-500 opacity-0 transition hover:bg-hoverstrong hover:text-ink-900 group-hover:opacity-100"
       >
         <X size={12} />
       </button>
@@ -305,7 +305,7 @@ function WindowSection({
             // 连续的未分组标签：直接铺在网格里
             if (block.kind === 'tabs') {
               return (
-                <div key={block.key} className="flex flex-col gap-1.5">
+                <div key={block.key} className="flex flex-col">
                   {block.tabs.map(renderTab)}
                 </div>
               );
@@ -343,7 +343,7 @@ function WindowSection({
                 </button>
 
                 {!block.collapsed && (
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col">
                     {block.tabs.map(renderTab)}
                   </div>
                 )}
