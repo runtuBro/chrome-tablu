@@ -50,7 +50,7 @@ function Favicon({ tab }: { tab: TabItem }) {
   if (failed || !src) {
     return (
       <div
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold ${colorOf(host)}`}
+        className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md text-[10px] font-semibold ${colorOf(host)}`}
         aria-hidden
       >
         {letter}
@@ -64,7 +64,7 @@ function Favicon({ tab }: { tab: TabItem }) {
       alt=""
       draggable={false}
       onError={() => setFailed(true)}
-      className="h-5 w-5 shrink-0 rounded object-contain"
+      className="h-[18px] w-[18px] shrink-0 rounded object-contain"
     />
   );
 }
@@ -101,7 +101,7 @@ function TabRow({
       }}
       title={`${tab.title}\n${tab.url}`}
       className={[
-        'group relative flex h-16 cursor-pointer select-none flex-col justify-center gap-0.5 rounded-xl bg-cardbg px-3 ring-1 transition-all duration-[250ms] ease-out',
+        'group relative flex h-16 cursor-pointer select-none flex-col justify-center gap-0.5 rounded-xl bg-cardbg px-2.5 ring-1 transition-all duration-[250ms] ease-out',
         tab.active
           ? 'bg-accentsoft ring-brand-500/40'
           : highlighted
@@ -116,7 +116,7 @@ function TabRow({
         />
       )}
 
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 items-center gap-1.5">
         <Favicon tab={tab} />
         <span
           className={[
@@ -128,7 +128,7 @@ function TabRow({
         </span>
       </div>
 
-      <div className="flex min-w-0 items-center gap-1.5 pl-[26px]">
+      <div className="flex min-w-0 items-center gap-1.5 pl-[24px]">
         <span className="min-w-0 truncate text-[11px] text-ink-500">{hostOf(tab.url)}</span>
         {tab.pinned && <Pin size={10} className="shrink-0 text-ink-500" />}
         {tab.audible && <Volume2 size={10} className="shrink-0 text-emerald-600" />}
@@ -286,7 +286,7 @@ function WindowSection({
       {open && (
         <div
           className="grid gap-2 px-3 pb-2"
-          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(232px, 1fr))' }}
+          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}
         >
           {rows.map((row) =>
             row.kind === 'group' ? (
