@@ -4,6 +4,10 @@ node_modules/
 # 构建产物（npm run build 可重新生成）
 dist/
 
+# 产品与技术文档只保留在本地，不进入公开仓库
+# （docs/images/ 下的展示图仍会被跟踪，README 引用它们）
+docs/*.md
+
 # 日志与系统文件
 *.log
 .DS_Store

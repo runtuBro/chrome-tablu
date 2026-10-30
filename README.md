@@ -99,9 +99,6 @@ npm run typecheck   # 类型检查
 npm run watch       # content 改动时增量重建
 ```
 
-技术细节、架构决策、构建原理见 [`docs/TECH-STACK.md`](docs/TECH-STACK.md)；
-产品范围与验收标准见 [`docs/PRD.md`](docs/PRD.md)。
-
 ## 目录
 
 ```
@@ -110,7 +107,7 @@ src/background/        Service Worker：读标签页、广播变化
 src/content/           注入到页面的面板（React + Shadow DOM）
 src/shared/            两端共用的类型、消息协议、i18n
 scripts/make-icons.mjs 纯 Node 生成图标
-docs/                  产品文档、技术方案、截图
+docs/images/           README 展示图
 ```
 
 ## 技术栈
