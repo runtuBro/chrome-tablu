@@ -169,20 +169,36 @@ async function trySendToggle(tabId: number): Promise<boolean> {
   }
 }
 
+/** 按页面类型给出具体原因，而不是一句笼统的"不支持" */
+async function unsupportedReason(tabId: number): Promise<string> {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    const url = tab.url ?? '';
+
+    if (url.startsWith('chrome://')) return '浏览器内部页面不支持扩展注入';
+    if (url.startsWith('chrome-extension://')) return '扩展页面不支持注入';
+    if (url.includes('chromewebstore.google.com') || url.includes('chrome.google.com/webstore')) {
+      return 'Chrome 应用商店页面不支持扩展注入';
+    }
+    if (url.startsWith('file://')) return '本地文件需先在扩展详情开启「允许访问文件网址」';
+    if (url.startsWith('about:')) return '空白页不支持扩展注入';
+
+    return '页面脚本未能加载，试试刷新后重试';
+  } catch {
+    return '无法在此页面显示面板';
+  }
+}
+
 async function flashUnsupported(tabId: number): Promise<void> {
+  const reason = await unsupportedReason(tabId);
   try {
     await chrome.action.setBadgeBackgroundColor({ tabId, color: '#ef4444' });
-    await chrome.action.setBadgeText({ tabId, text: '!' });
-    await chrome.action.setTitle({
-      tabId,
-      title: '此页面不支持：chrome:// 开头的页面禁止扩展注入，换个普通网页试试',
-    });
+    await chrome.action.setBadgeText({ tabId, text: '×' });
+    await chrome.action.setTitle({ tabId, title: `TabMind 无法打开：${reason}` });
     setTimeout(() => {
       chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
-      chrome.action
-        .setTitle({ tabId, title: '打开 TabMind 面板' })
-        .catch(() => {});
-    }, 3000);
+      chrome.action.setTitle({ tabId, title: '打开 TabMind 面板' }).catch(() => {});
+    }, 5000);
   } catch {
     /* 标签页可能已经关了 */
   }
