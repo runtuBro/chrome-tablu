@@ -480,8 +480,11 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
         <Settings2 size={16} />
       </button>
 
+      {/* 顶部与列表的分割线：图标区与内容区的视觉边界 */}
+      <div className="mt-9 h-px shrink-0 bg-ink-500/15" />
+
       {/* 列表 */}
-      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 mt-11">
+      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 mt-2">
         {loading && groups.length === 0 && (
           <div className="flex h-full items-center justify-center text-[13px] text-ink-500">
             正在读取标签页…
