@@ -18,6 +18,7 @@ export default {
         hoverstrong: 'rgb(var(--tm-hover) / var(--tm-hover-strong-a))',
         fieldbg: 'rgb(var(--tm-field) / var(--tm-field-a))',
         cardbg: 'rgb(var(--tm-card) / var(--tm-card-a))',
+        groupbg: 'rgb(var(--tm-group) / var(--tm-group-a))',
         glassring: 'rgb(var(--tm-ring) / var(--tm-ring-a))',
         accentsoft: 'rgb(var(--tm-accent-soft) / var(--tm-accent-soft-a))',
 

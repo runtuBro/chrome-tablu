@@ -74,17 +74,11 @@ function Favicon({ tab }: { tab: TabItem }) {
 function TabRow({
   tab,
   highlighted,
-  indented,
-  groupColor,
   onHover,
   rowRef,
 }: {
   tab: TabItem;
   highlighted: boolean;
-  /** 属于某个标签组时缩进，视觉上从属于上面的组头 */
-  indented: boolean;
-  /** 组色，用来画左侧的从属竖线 */
-  groupColor?: string;
   onHover: () => void;
   rowRef: (el: HTMLDivElement | null) => void;
 }) {
@@ -110,12 +104,6 @@ function TabRow({
       ].join(' ')}
     >
       {/* 所属标签组的色条：网格布局下靠颜色标识归属，不做缩进 */}
-      {groupColor && (
-        <span
-          className={`pointer-events-none absolute bottom-2.5 left-[3px] top-2.5 w-[2px] rounded-full opacity-70 ${groupColor}`}
-        />
-      )}
-
       <div className="flex min-w-0 items-center gap-1.5">
         <Favicon tab={tab} />
         <span
@@ -152,78 +140,95 @@ function TabRow({
 
 /* ---------- 行模型：把「组头」和「标签」摊平成一条序列 ---------- */
 
-type Row =
-  | { kind: 'group'; group: TabGroupInfo; count: number; total: number; collapsed: boolean }
-  | { kind: 'tab'; tab: TabItem; indented: boolean; groupColor?: string };
+type Block =
+  | {
+      kind: 'group';
+      group: TabGroupInfo;
+      count: number;
+      total: number;
+      collapsed: boolean;
+      tabs: TabItem[];
+    }
+  | { kind: 'tabs'; key: string; tabs: TabItem[] };
 
 /**
- * Chrome 的标签组一定是连续的（组不可被拆开），所以按 index 顺序扫一遍，
- * 遇到新的 groupId 就插一个组头即可。
+ * Chrome 的标签组一定是连续的（组不可被拆开），所以按 index 顺序扫一遍即可。
+ *
+ * 产出的不是"组头 + 散卡"的扁平序列，而是"组块 / 散卡块"两类区块：
+ * 组块自带容器，把组内卡片装进去；散卡块是连续的未分组标签。
+ * 这样组的边界由容器表达，而不是靠中间插一行标题。
  */
-function buildRows(
+function buildBlocks(
   tabs: TabItem[],
   groups: TabGroupInfo[],
   /** 搜索前的组大小，用来在组头显示「命中/总数」 */
   groupTotals: Map<number, number>,
   forceOpen: boolean,
   override: Record<number, boolean>,
-): Row[] {
+): Block[] {
   const infoById = new Map(groups.map((g) => [g.id, g]));
+  const blocks: Block[] = [];
+  let loose: TabItem[] = [];
+  let i = 0;
 
-  const counts = new Map<number, number>();
-  for (const t of tabs) {
-    if (t.groupId !== NO_GROUP) counts.set(t.groupId, (counts.get(t.groupId) ?? 0) + 1);
+  const flushLoose = () => {
+    if (loose.length) {
+      blocks.push({ kind: 'tabs', key: `loose-${loose[0].id}`, tabs: loose });
+      loose = [];
+    }
+  };
+
+  while (i < tabs.length) {
+    const t = tabs[i];
+
+    if (t.groupId === NO_GROUP) {
+      loose.push(t);
+      i++;
+      continue;
+    }
+
+    const gid = t.groupId;
+    const info = infoById.get(gid);
+
+    // 收集同组的连续标签
+    const groupTabs: TabItem[] = [];
+    while (i < tabs.length && tabs[i].groupId === gid) {
+      groupTabs.push(tabs[i]);
+      i++;
+    }
+
+    if (!info) {
+      // 组信息缺失（理论上不会发生），降级成普通卡片
+      loose.push(...groupTabs);
+      continue;
+    }
+
+    flushLoose();
+    blocks.push({
+      kind: 'group',
+      group: info,
+      count: groupTabs.length,
+      total: groupTotals.get(gid) ?? groupTabs.length,
+      collapsed: forceOpen ? false : (override[gid] ?? info.collapsed),
+      tabs: groupTabs,
+    });
   }
 
-  const rows: Row[] = [];
-  let lastGroup = NO_GROUP;
-  let collapsed = false;
-
-  for (const t of tabs) {
-    if (t.groupId !== lastGroup) {
-      if (t.groupId === NO_GROUP) {
-        collapsed = false;
-      } else {
-        const info = infoById.get(t.groupId);
-        if (info) {
-          const isCollapsed = forceOpen ? false : (override[t.groupId] ?? info.collapsed);
-          const count = counts.get(t.groupId) ?? 0;
-          rows.push({
-            kind: 'group',
-            group: info,
-            count,
-            total: groupTotals.get(t.groupId) ?? count,
-            collapsed: isCollapsed,
-          });
-          collapsed = isCollapsed;
-        } else {
-          collapsed = false;
-        }
-      }
-      lastGroup = t.groupId;
-    }
-    if (!collapsed) {
-      rows.push({
-        kind: 'tab',
-        tab: t,
-        indented: t.groupId !== NO_GROUP,
-        groupColor:
-          t.groupId !== NO_GROUP && infoById.get(t.groupId)
-            ? GROUP_COLOR_CLASS[infoById.get(t.groupId)!.color]
-            : undefined,
-      });
-    }
-  }
-
-  return rows;
+  flushLoose();
+  return blocks;
 }
 
 /* ---------- 窗口分组 ---------- */
 
+/** 卡片网格：880px 面板下稳定排 4 列，面板变宽会自动增加列数 */
+const GRID_STYLE: React.CSSProperties = {
+  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+};
+
 function WindowSection({
   group,
   index,
-  rows,
+  blocks,
   totalCount,
   activeTitle,
   showHeader,
@@ -236,7 +241,7 @@ function WindowSection({
 }: {
   group: WindowGroup;
   index: number;
-  rows: Row[];
+  blocks: Block[];
   totalCount: number;
   activeTitle?: string;
   showHeader: boolean;
@@ -248,7 +253,11 @@ function WindowSection({
   onToggleGroup: (groupId: number, current: boolean) => void;
 }) {
   const open = !showHeader || !collapsed;
-  const shownTabs = rows.filter((r) => r.kind === 'tab').length;
+  // 折叠的组块里那些标签不算"可见"
+  const shownTabs = blocks.reduce(
+    (n, b) => n + (b.kind === 'tabs' || !b.collapsed ? b.tabs.length : 0),
+    0,
+  );
   const countLabel =
     shownTabs === totalCount ? `${totalCount} 个标签` : `${shownTabs}/${totalCount} 个标签`;
 
@@ -284,52 +293,69 @@ function WindowSection({
       )}
 
       {open && (
-        <div
-          className="grid gap-2 px-3 pb-2"
-          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}
-        >
-          {rows.map((row) =>
-            row.kind === 'group' ? (
-              <button
-                key={`g-${row.group.id}`}
-                type="button"
-                onClick={() => onToggleGroup(row.group.id, row.collapsed)}
-                title={`标签组：${row.group.title || '未命名'}（点击折叠/展开）`}
-                className="col-span-full mt-1 flex w-full items-center gap-2 rounded-lg px-1 py-1 text-left transition-colors duration-[250ms] ease-out hover:bg-hoverbg"
-              >
-                <span
-                  className={`h-3 w-[3px] shrink-0 rounded-full ${GROUP_COLOR_CLASS[row.group.color] ?? 'bg-slate-400'}`}
-                />
-                <span
-                  className={`min-w-0 flex-1 truncate text-[12px] font-medium ${
-                    row.group.title ? 'text-ink-700' : 'text-ink-500'
-                  }`}
-                >
-                  {row.group.title || '未命名组'}
-                </span>
-                <span className="shrink-0 text-[11px] tabular-nums text-ink-500">
-                  {row.count === row.total ? row.count : `${row.count}/${row.total}`}
-                </span>
-                <ChevronRight
-                  size={12}
-                  className={`shrink-0 text-ink-500 transition-transform ${row.collapsed ? '' : 'rotate-90'}`}
-                />
-              </button>
-            ) : (
+        <div className="flex flex-col gap-2 px-3 pb-2">
+          {blocks.map((block) => {
+            const renderTab = (tab: TabItem) => (
               <TabRow
-                key={row.tab.id}
-                tab={row.tab}
-                highlighted={highlightId === row.tab.id}
-                indented={row.indented}
-                groupColor={row.groupColor}
-                onHover={() => setHighlightId(row.tab.id)}
+                key={tab.id}
+                tab={tab}
+                highlighted={highlightId === tab.id}
+                onHover={() => setHighlightId(tab.id)}
                 rowRef={(el) => {
-                  if (el) rowRefs.current.set(row.tab.id, el);
-                  else rowRefs.current.delete(row.tab.id);
+                  if (el) rowRefs.current.set(tab.id, el);
+                  else rowRefs.current.delete(tab.id);
                 }}
               />
-            ),
-          )}
+            );
+
+            // 连续的未分组标签：直接铺在网格里
+            if (block.kind === 'tabs') {
+              return (
+                <div key={block.key} className="grid gap-2" style={GRID_STYLE}>
+                  {block.tabs.map(renderTab)}
+                </div>
+              );
+            }
+
+            // 标签组：独立容器，把组内卡片装进去，边界由容器表达
+            return (
+              <div
+                key={`g-${block.group.id}`}
+                className="rounded-xl bg-groupbg p-2 ring-1 ring-hairline"
+              >
+                <button
+                  type="button"
+                  onClick={() => onToggleGroup(block.group.id, block.collapsed)}
+                  title={`标签组：${block.group.title || '未命名'}（点击折叠/展开）`}
+                  className="mb-1.5 flex w-full items-center gap-2 rounded-lg py-0.5 text-left transition-colors duration-[250ms] ease-out hover:bg-hoverbg"
+                >
+                  <span
+                    className={`h-3 w-[3px] shrink-0 rounded-full ${GROUP_COLOR_CLASS[block.group.color] ?? 'bg-slate-400'}`}
+                  />
+                  <span
+                    className={`min-w-0 flex-1 truncate text-[12px] font-medium ${
+                      block.group.title ? 'text-ink-700' : 'text-ink-500'
+                    }`}
+                  >
+                    {block.group.title || '未命名组'}
+                  </span>
+                  <span className="shrink-0 text-[11px] tabular-nums text-ink-500">
+                    {block.count === block.total ? block.count : `${block.count}/${block.total}`}
+                  </span>
+                  <ChevronRight
+                    size={12}
+                    className={`shrink-0 text-ink-500 transition-transform ${block.collapsed ? '' : 'rotate-90'}`}
+                  />
+                </button>
+
+                {!block.collapsed && (
+                  <div className="grid gap-2" style={GRID_STYLE}>
+                    {block.tabs.map(renderTab)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </section>
@@ -385,7 +411,7 @@ export function TabList({
         }
         return {
           group,
-          rows: buildRows(group.tabs, group.groups, totals, Boolean(q), groupOverride),
+          blocks: buildBlocks(group.tabs, group.groups, totals, Boolean(q), groupOverride),
         };
       }),
     [filtered, groups, q, groupOverride],
@@ -394,9 +420,11 @@ export function TabList({
   // 当前屏幕上真正可见的标签，键盘上下移动只在这上面走
   const visibleTabs = useMemo(() => {
     const out: TabItem[] = [];
-    for (const { group, rows } of sections) {
+    for (const { group, blocks } of sections) {
       if (!q && collapsed.includes(group.windowId)) continue;
-      for (const r of rows) if (r.kind === 'tab') out.push(r.tab);
+      for (const b of blocks) {
+        if (b.kind === 'tabs' || !b.collapsed) out.push(...b.tabs);
+      }
     }
     return out;
   }, [sections, collapsed, q]);
@@ -511,12 +539,12 @@ export function TabList({
           </div>
         )}
 
-        {sections.map(({ group, rows }) => (
+        {sections.map(({ group, blocks }) => (
           <WindowSection
             key={group.windowId}
             group={group}
             index={Math.max(0, groups.findIndex((g) => g.windowId === group.windowId))}
-            rows={rows}
+            blocks={blocks}
             totalCount={groups.find((g) => g.windowId === group.windowId)?.tabs.length ?? group.tabs.length}
             activeTitle={
               groups
