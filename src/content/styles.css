@@ -26,12 +26,12 @@
 .tm-overlay {
   /* 浅色（默认） */
   --tm-ink-900: 15 23 42;
-  --tm-ink-700: 51 65 85;
-  --tm-ink-500: 100 116 139;
+  --tm-ink-700: 30 41 59;
+  --tm-ink-500: 71 85 105;
   --tm-ink-300: 203 213 225;
 
-  --tm-surface: 252 252 253;
-  --tm-surface-a: 0.92;
+  --tm-surface: 255 255 255;
+  --tm-surface-a: 0.88;
 
   --tm-hairline: 15 23 42;
   --tm-hairline-a: 0.06;
@@ -73,8 +73,8 @@
   align-items: center;
   justify-content: center;
   background: rgb(var(--tm-overlay-bg) / var(--tm-overlay-a));
-  backdrop-filter: blur(4px) saturate(95%);
-  -webkit-backdrop-filter: blur(4px) saturate(95%);
+  backdrop-filter: blur(10px) saturate(95%);
+  -webkit-backdrop-filter: blur(10px) saturate(95%);
   overscroll-behavior: contain;
   pointer-events: auto;
 }
@@ -82,12 +82,12 @@
 /* 深色：面板换成深色半透明，遮罩更深，让面板浮起来 */
 .tm-overlay[data-theme='dark'] {
   --tm-ink-900: 241 245 249;
-  --tm-ink-700: 203 213 225;
-  --tm-ink-500: 148 163 184;
+  --tm-ink-700: 226 232 240;
+  --tm-ink-500: 203 213 225;
   --tm-ink-300: 100 116 139;
 
   --tm-surface: 15 23 42;
-  --tm-surface-a: 0.94;
+  --tm-surface-a: 0.88;
 
   --tm-hairline: 255 255 255;
   --tm-hairline-a: 0.09;
@@ -120,8 +120,8 @@
     0 2px 6px rgba(0, 0, 0, 0.18),
     0 16px 40px -8px rgba(0, 0, 0, 0.42);
 
-  backdrop-filter: blur(4px) saturate(85%) brightness(0.8);
-  -webkit-backdrop-filter: blur(4px) saturate(85%) brightness(0.8);
+  backdrop-filter: blur(10px) saturate(85%) brightness(0.8);
+  -webkit-backdrop-filter: blur(10px) saturate(85%) brightness(0.8);
 }
 
 /* 面板轮廓与受光 */
