@@ -16,7 +16,7 @@ import {
   type TabItem,
   type WindowGroup,
 } from '../shared/types';
-import type { Request, Response } from '../shared/protocol';
+import { PANEL_PORT, type PortMessage, type Request, type Response } from '../shared/protocol';
 
 /* ------------------------------------------------------------------ *
  * 标签页快照
@@ -96,23 +96,57 @@ async function buildSnapshot(): Promise<WindowGroup[]> {
 }
 
 /* ------------------------------------------------------------------ *
- * 广播：只在面板真正打开着的标签页上发，避免全量骚扰
+ * 广播：走长连接 Port，而不是 tabs.sendMessage
+ *
+ * 为什么必须用 Port：
+ * MV3 的 service worker 空闲 30 秒会被回收，模块级变量（比如"哪些标签页
+ * 开着面板"这份登记）随之消失。回收后广播发不出去，面板看起来一切正常，
+ * 内容却停在几分钟前——不报错，用户只能靠自己发现。
+ *
+ * Port 会在 SW 回收时自动断开，content script 立刻感知并重连，
+ * 重连时这里主动推一份最新快照。用户看到的只是列表自己刷新了一下。
  * ------------------------------------------------------------------ */
 
-const panelTabs = new Set<number>();
+const panelPorts = new Map<number, chrome.runtime.Port>();
 let broadcastTimer: ReturnType<typeof setTimeout> | null = null;
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== PANEL_PORT) return;
+  const tabId = port.sender?.tab?.id;
+  if (tabId == null) return;
+
+  panelPorts.set(tabId, port);
+  port.onDisconnect.addListener(() => {
+    // 只删自己：重连过程中新 port 可能已经登记上来了
+    if (panelPorts.get(tabId) === port) panelPorts.delete(tabId);
+  });
+
+  // 连上就推一份，重连后的第一帧不依赖任何用户操作
+  void buildSnapshot().then((groups) => {
+    try {
+      port.postMessage({ type: 'TABS_SNAPSHOT', groups } satisfies PortMessage);
+    } catch {
+      /* 已经断开，onDisconnect 会处理 */
+    }
+  });
+});
+
+function postToPanels(groups: WindowGroup[]): void {
+  for (const [tabId, port] of [...panelPorts]) {
+    try {
+      port.postMessage({ type: 'TABS_SNAPSHOT', groups } satisfies PortMessage);
+    } catch {
+      panelPorts.delete(tabId);
+    }
+  }
+}
 
 function scheduleBroadcast(): void {
   if (broadcastTimer) clearTimeout(broadcastTimer);
   broadcastTimer = setTimeout(async () => {
     broadcastTimer = null;
-    if (panelTabs.size === 0) return;
-    const groups = await buildSnapshot();
-    for (const tabId of [...panelTabs]) {
-      chrome.tabs
-        .sendMessage(tabId, { type: 'TABS_SNAPSHOT', groups })
-        .catch(() => panelTabs.delete(tabId));
-    }
+    if (panelPorts.size === 0) return;
+    postToPanels(await buildSnapshot());
   }, 180);
 }
 
@@ -123,7 +157,7 @@ chrome.tabs.onAttached.addListener(scheduleBroadcast);
 chrome.tabs.onDetached.addListener(scheduleBroadcast);
 chrome.tabs.onReplaced.addListener(scheduleBroadcast);
 chrome.tabs.onRemoved.addListener((tabId) => {
-  panelTabs.delete(tabId);
+  panelPorts.delete(tabId);
   scheduleBroadcast();
 });
 chrome.tabs.onUpdated.addListener((_tabId, info) => {
@@ -249,14 +283,6 @@ async function handleRequest(
 
     case 'CLOSE_TAB':
       await chrome.tabs.remove(msg.tabId);
-      return { ok: true };
-
-    case 'PANEL_OPENED':
-      if (sender.tab?.id != null) panelTabs.add(sender.tab.id);
-      return { ok: true };
-
-    case 'PANEL_CLOSED':
-      if (sender.tab?.id != null) panelTabs.delete(sender.tab.id);
       return { ok: true };
 
     case 'GET_SHORTCUT': {

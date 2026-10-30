@@ -404,6 +404,7 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
   const groupOverride = useStore((s) => s.groupOverride);
   const language = useStore((s) => s.settings.language);
   const sortMode = useStore((s) => s.settings.sortMode);
+  const visible = useStore((s) => s.visible);
   const toggleWindow = useStore((s) => s.toggleWindow);
   const toggleGroup = useStore((s) => s.toggleGroup);
   const activateTab = useStore((s) => s.activateTab);
@@ -440,10 +441,14 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
     return out;
   }, [sections, collapsed]);
 
-  // 没有搜索框了，焦点放到面板根节点，↑↓ / Enter 才能收到
+  // 面板打开时把焦点放到根节点，↑↓ / Enter 才能收到。
+  //
+  // 必须跟着 visible 走，不能只在挂载时执行一次：面板从 v0.8.0 起是常驻 DOM
+  // （关闭动画需要它一直在），挂载那一刻它还是 visibility:hidden，
+  // 对隐藏元素调 focus() 会静默失败，之后再打开就永远没有焦点了。
   useEffect(() => {
-    rootRef.current?.focus();
-  }, []);
+    if (visible) rootRef.current?.focus();
+  }, [visible]);
 
   useEffect(() => {
     if (highlightId == null) return;

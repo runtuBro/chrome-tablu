@@ -10,8 +10,6 @@ export type Request =
   | { type: 'GET_TABS' }
   | { type: 'ACTIVATE_TAB'; tabId: number; windowId: number }
   | { type: 'CLOSE_TAB'; tabId: number }
-  | { type: 'PANEL_OPENED' }
-  | { type: 'PANEL_CLOSED' }
   | { type: 'GET_SHORTCUT' }
   | { type: 'OPEN_SHORTCUTS_PAGE' }
   | { type: 'GET_BOOKMARKS' }
@@ -29,9 +27,14 @@ export type Response =
     }
   | { ok: false; error: string };
 
-/* ---------- background → content（广播 / 指令） ---------- */
+/* ---------- background → content（指令，走 sendMessage） ---------- */
 
-export type BackgroundMessage =
-  | { type: 'TABS_SNAPSHOT'; groups: WindowGroup[] }
-  | { type: 'TOGGLE_PANEL' }
-  | { type: 'OPEN_PANEL' };
+export type BackgroundMessage = { type: 'TOGGLE_PANEL' } | { type: 'OPEN_PANEL' };
+
+/* ---------- 长连接 Port ---------- */
+
+/** 面板快照通道的 port 名，两侧共用，避免拼错 */
+export const PANEL_PORT = 'tabmind-panel';
+
+/** Port 上传输的消息（与一次性 sendMessage 的响应区分开） */
+export type PortMessage = { type: 'TABS_SNAPSHOT'; groups: WindowGroup[] };
