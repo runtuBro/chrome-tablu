@@ -380,13 +380,7 @@ function WindowSection({
 
 /* ---------- 主组件 ---------- */
 
-export function TabList({
-  onClose,
-  onOpenSettings,
-}: {
-  onClose: () => void;
-  onOpenSettings: () => void;
-}) {
+export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
   const groups = useStore((s) => s.groups);
   const loading = useStore((s) => s.loading);
   const collapsed = useStore((s) => s.collapsed);
@@ -486,18 +480,10 @@ export function TabList({
         >
           <Settings2 size={15} />
         </button>
-        <button
-          type="button"
-          onClick={onClose}
-          title="关闭 (Esc)"
-          className="rounded-lg p-1.5 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
-        >
-          <X size={15} />
-        </button>
       </div>
 
       {/* 列表 */}
-      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 pt-11">
+      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-3 pt-10">
         {loading && groups.length === 0 && (
           <div className="flex h-full items-center justify-center text-[13px] text-ink-500">
             正在读取标签页…

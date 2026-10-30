@@ -85,10 +85,7 @@ export function App() {
         {view === 'settings' ? (
           <SettingsView onBack={() => setView('list')} onClose={() => setVisible(false)} />
         ) : (
-          <TabList
-            onClose={() => setVisible(false)}
-            onOpenSettings={() => setView('settings')}
-          />
+          <TabList onOpenSettings={() => setView('settings')} />
         )}
 
         {notice && (
