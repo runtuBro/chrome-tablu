@@ -31,7 +31,7 @@
   --tm-ink-300: 203 213 225;
 
   --tm-surface: 252 252 253;
-  --tm-surface-a: 0.92;
+  --tm-surface-a: 0.84;
 
   --tm-hairline: 15 23 42;
   --tm-hairline-a: 0.06;
@@ -73,8 +73,8 @@
   align-items: center;
   justify-content: center;
   background: rgb(var(--tm-overlay-bg) / var(--tm-overlay-a));
-  backdrop-filter: blur(4px) saturate(95%);
-  -webkit-backdrop-filter: blur(4px) saturate(95%);
+  backdrop-filter: blur(10px) saturate(95%);
+  -webkit-backdrop-filter: blur(10px) saturate(95%);
   overscroll-behavior: contain;
   pointer-events: auto;
 }
@@ -87,7 +87,7 @@
   --tm-ink-300: 100 116 139;
 
   --tm-surface: 15 23 42;
-  --tm-surface-a: 0.94;
+  --tm-surface-a: 0.88;
 
   --tm-hairline: 255 255 255;
   --tm-hairline-a: 0.09;
@@ -120,8 +120,8 @@
     0 2px 6px rgba(0, 0, 0, 0.18),
     0 16px 40px -8px rgba(0, 0, 0, 0.42);
 
-  backdrop-filter: blur(4px) saturate(85%) brightness(0.8);
-  -webkit-backdrop-filter: blur(4px) saturate(85%) brightness(0.8);
+  backdrop-filter: blur(10px) saturate(85%) brightness(0.8);
+  -webkit-backdrop-filter: blur(10px) saturate(85%) brightness(0.8);
 }
 
 /* 面板轮廓与受光 */
