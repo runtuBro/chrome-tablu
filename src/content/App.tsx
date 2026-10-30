@@ -77,7 +77,7 @@ export function App() {
       }}
     >
       <div
-        className="tm-anim animate-panelIn tm-glass-sheen flex max-h-[min(660px,88vh)] min-h-[200px] w-[min(880px,92vw)] flex-col overflow-hidden rounded-2xl bg-surface shadow-panel ring-1 ring-glassring backdrop-blur-lg backdrop-saturate-150"
+        className="tm-anim animate-panelIn tm-glass-sheen tm-panel flex max-h-[min(660px,88vh)] min-h-[200px] w-[min(880px,92vw)] flex-col overflow-hidden rounded-xl bg-surface backdrop-blur-lg backdrop-saturate-150"
         role="dialog"
         aria-modal="true"
         aria-label="标签页总览"

@@ -52,6 +52,13 @@
   --tm-overlay-bg: 15 23 42;
   --tm-overlay-a: 0.35;
 
+  /* 面板轮廓：浅色靠细边框，深色靠顶部受光（见下方覆盖） */
+  --tm-panel-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.06),
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 8px 16px -4px rgba(15, 23, 42, 0.09),
+    0 24px 48px -12px rgba(15, 23, 42, 0.2);
+
   position: fixed;
   inset: 0;
   display: flex;
@@ -93,8 +100,19 @@
   --tm-overlay-bg: 2 6 23;
   --tm-overlay-a: 0.62;
 
+  --tm-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.18),
+    0 16px 40px -8px rgba(0, 0, 0, 0.42);
+
   backdrop-filter: blur(4px) saturate(85%) brightness(0.8);
   -webkit-backdrop-filter: blur(4px) saturate(85%) brightness(0.8);
+}
+
+/* 面板轮廓与受光 */
+.tm-panel {
+  box-shadow: var(--tm-panel-shadow);
 }
 
 /* 面板上沿的一道高光，玻璃质感靠它撑起来 */

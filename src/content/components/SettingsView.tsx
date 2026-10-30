@@ -118,7 +118,7 @@ export function SettingsView({
       <div className="tm-scroll min-h-0 flex-1 overflow-y-auto p-5">
         {/* 外观 */}
         <h3 className="mb-2 text-[12px] font-medium text-ink-500">外观</h3>
-        <div className="rounded-xl bg-fieldbg p-1 ring-1 ring-hairline">
+        <div className="rounded-lg bg-fieldbg p-1 ring-1 ring-hairline">
           <div className="flex gap-1">
             {THEME_OPTIONS.map(({ value, label, icon: Icon }) => {
               const selected = theme === value;
@@ -148,7 +148,7 @@ export function SettingsView({
           快捷键
         </h3>
 
-        <div className="flex items-center gap-3 rounded-xl bg-fieldbg px-4 py-3 ring-1 ring-hairline">
+        <div className="flex items-center gap-3 rounded-lg bg-fieldbg px-4 py-3 ring-1 ring-hairline">
           <div className="min-w-0 flex-1">
             <div className="text-[13px] text-ink-900">打开 / 关闭面板</div>
             <div className="mt-0.5 text-[11px] text-ink-500">
@@ -184,7 +184,7 @@ export function SettingsView({
 
         {/* 关于 */}
         <h3 className="mb-2 mt-6 text-[12px] font-medium text-ink-500">关于</h3>
-        <div className="rounded-xl bg-fieldbg px-4 py-3 text-[12px] text-ink-700 ring-1 ring-hairline">
+        <div className="rounded-lg bg-fieldbg px-4 py-3 text-[12px] text-ink-700 ring-1 ring-hairline">
           <div className="flex items-center justify-between">
             <span>TabMind</span>
             <span className="tabular-nums text-ink-500">v{version}</span>
