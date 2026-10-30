@@ -77,7 +77,7 @@ export function App() {
     >
       <div
         className={[
-          'tm-panel-anim tm-glass-sheen tm-panel flex w-[min(880px,92vw)] flex-col overflow-hidden rounded-xl bg-surface backdrop-blur-lg backdrop-saturate-150',
+          'tm-panel-anim tm-glass-sheen tm-panel flex w-[min(845px,92vw)] flex-col overflow-hidden rounded-xl bg-surface backdrop-blur-lg backdrop-saturate-150',
           heightMode === 'fixed'
             ? 'h-[min(660px,88vh)]'
             : 'max-h-[min(660px,88vh)] min-h-[200px]',
