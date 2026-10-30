@@ -539,7 +539,7 @@ export function TabList({
       </div>
 
       {/* 列表 */}
-      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2">
+      <div className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 pt-2">
         {loading && groups.length === 0 && (
           <div className="flex h-full items-center justify-center text-[13px] text-ink-500">
             正在读取标签页…
