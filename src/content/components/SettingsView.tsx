@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, X, ExternalLink, Keyboard, Monitor, Sun, Moon } from 'lucide-react';
 import { useStore } from '../store';
-import type { ThemeMode } from '../../shared/types';
+import { t, type MessageKey } from '../../shared/i18n';
+import type { HeightMode, Lang, SortMode, ThemeMode } from '../../shared/types';
 
 /**
  * 把 Chrome 返回的快捷键串格式化成好读的样子。
@@ -44,11 +45,42 @@ function formatShortcut(raw: string): string {
   return parts.join(isMac ? ' ' : ' + ');
 }
 
-const THEME_OPTIONS: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
-  { value: 'system', label: '跟随系统', icon: Monitor },
-  { value: 'light', label: '浅色', icon: Sun },
-  { value: 'dark', label: '深色', icon: Moon },
-];
+/** 分段选择器：主题、语言、高度、排序共用同一套外观 */
+function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string; icon?: typeof Sun }[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="rounded-lg bg-fieldbg p-1 ring-1 ring-hairline">
+      <div className="flex gap-1">
+        {options.map(({ value: v, label, icon: Icon }) => {
+          const selected = value === v;
+          return (
+            <button
+              key={v}
+              type="button"
+              onClick={() => onChange(v)}
+              className={[
+                'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[12px] transition',
+                selected
+                  ? 'bg-brand-500 font-medium text-white shadow-sm'
+                  : 'text-ink-700 hover:bg-hoverbg hover:text-ink-900',
+              ].join(' ')}
+            >
+              {Icon && <Icon size={13} />}
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function SettingsView({
   onBack,
@@ -58,7 +90,16 @@ export function SettingsView({
   onClose: () => void;
 }) {
   const theme = useStore((s) => s.settings.theme);
+  const language = useStore((s) => s.settings.language);
+  const heightMode = useStore((s) => s.settings.heightMode);
+  const sortMode = useStore((s) => s.settings.sortMode);
   const setTheme = useStore((s) => s.setTheme);
+  const setLanguage = useStore((s) => s.setLanguage);
+  const setHeightMode = useStore((s) => s.setHeightMode);
+  const setSortMode = useStore((s) => s.setSortMode);
+
+  const tr = (key: MessageKey, vars?: Record<string, string | number>) =>
+    t(language, key, vars);
 
   const [shortcut, setShortcut] = useState<string | null>(null);
   const [version, setVersion] = useState('');
@@ -99,16 +140,16 @@ export function SettingsView({
         <button
           type="button"
           onClick={onBack}
-          title="返回列表"
+          title={tr('back')}
           className="rounded-lg p-2 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
         >
           <ChevronLeft size={16} />
         </button>
-        <span className="text-[13px] font-medium text-ink-900">设置</span>
+        <span className="text-[13px] font-medium text-ink-900">{tr('settings')}</span>
         <button
           type="button"
           onClick={onClose}
-          title="关闭 (Esc)"
+          title="Esc"
           className="ml-auto rounded-lg p-2 text-ink-500 transition hover:bg-hoverstrong hover:text-ink-900"
         >
           <X size={16} />
@@ -117,46 +158,67 @@ export function SettingsView({
 
       <div className="tm-scroll min-h-0 flex-1 overflow-y-auto p-5">
         {/* 外观 */}
-        <h3 className="mb-2 text-[12px] font-medium text-ink-500">外观</h3>
-        <div className="rounded-lg bg-fieldbg p-1 ring-1 ring-hairline">
-          <div className="flex gap-1">
-            {THEME_OPTIONS.map(({ value, label, icon: Icon }) => {
-              const selected = theme === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setTheme(value)}
-                  className={[
-                    'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[12px] transition',
-                    selected
-                      ? 'bg-brand-500 font-medium text-white shadow-sm'
-                      : 'text-ink-700 hover:bg-hoverbg hover:text-ink-900',
-                  ].join(' ')}
-                >
-                  <Icon size={13} />
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <h3 className="mb-2 text-[12px] font-medium text-ink-500">{tr('appearance')}</h3>
+        <Segmented<ThemeMode>
+          value={theme}
+          onChange={setTheme}
+          options={[
+            { value: 'system', label: tr('themeSystem'), icon: Monitor },
+            { value: 'light', label: tr('themeLight'), icon: Sun },
+            { value: 'dark', label: tr('themeDark'), icon: Moon },
+          ]}
+        />
+
+        {/* 语言 */}
+        <h3 className="mb-2 mt-6 text-[12px] font-medium text-ink-500">{tr('language')}</h3>
+        <Segmented<Lang>
+          value={language}
+          onChange={setLanguage}
+          options={[
+            { value: 'zh', label: tr('langZh') },
+            { value: 'en', label: tr('langEn') },
+          ]}
+        />
+
+        {/* 面板高度 */}
+        <h3 className="mb-2 mt-6 text-[12px] font-medium text-ink-500">{tr('panelHeight')}</h3>
+        <Segmented<HeightMode>
+          value={heightMode}
+          onChange={setHeightMode}
+          options={[
+            { value: 'auto', label: tr('heightAuto') },
+            { value: 'fixed', label: tr('heightFixed') },
+          ]}
+        />
+        <p className="mt-2 text-[11px] leading-relaxed text-ink-500">{tr('heightHint')}</p>
+
+        {/* 排序 */}
+        <h3 className="mb-2 mt-6 text-[12px] font-medium text-ink-500">{tr('sorting')}</h3>
+        <Segmented<SortMode>
+          value={sortMode}
+          onChange={setSortMode}
+          options={[
+            { value: 'default', label: tr('sortDefault') },
+            { value: 'recent', label: tr('sortRecent') },
+          ]}
+        />
+        <p className="mt-2 text-[11px] leading-relaxed text-ink-500">{tr('sortHint')}</p>
 
         {/* 快捷键 */}
         <h3 className="mb-2 mt-6 flex items-center gap-1.5 text-[12px] font-medium text-ink-500">
           <Keyboard size={12} />
-          快捷键
+          {tr('shortcut')}
         </h3>
 
         <div className="flex items-center gap-3 rounded-lg bg-fieldbg px-4 py-3 ring-1 ring-hairline">
           <div className="min-w-0 flex-1">
-            <div className="text-[13px] text-ink-900">打开 / 关闭面板</div>
+            <div className="text-[13px] text-ink-900">{tr('openClosePanel')}</div>
             <div className="mt-0.5 text-[11px] text-ink-500">
               {shortcut === null
-                ? '读取中…'
+                ? '…'
                 : active
-                  ? '当前已生效'
-                  : '未设置 · 可能与其他扩展或系统快捷键冲突'}
+                  ? tr('shortcutActive')
+                  : tr('shortcutMissing')}
             </div>
           </div>
 
@@ -171,27 +233,21 @@ export function SettingsView({
             onClick={() => void openShortcutsPage()}
             className="flex shrink-0 items-center gap-1 rounded-lg bg-brand-500 px-2.5 py-1.5 text-[12px] font-medium text-white transition hover:bg-brand-600"
           >
-            修改
+            {tr('change')}
             <ExternalLink size={11} />
           </button>
         </div>
 
-        <p className="mt-2.5 text-[11px] leading-relaxed text-ink-500">
-          点击「修改」会打开 Chrome 自带的快捷键页面，在那里给 TabMind 指定组合键。
-          <br />
-          扩展无法用代码设置自己的快捷键——这是 Chrome 的限制，所有扩展都一样。
-        </p>
+        <p className="mt-2.5 text-[11px] leading-relaxed text-ink-500">{tr('shortcutHint')}</p>
 
         {/* 关于 */}
-        <h3 className="mb-2 mt-6 text-[12px] font-medium text-ink-500">关于</h3>
+        <h3 className="mb-2 mt-6 text-[12px] font-medium text-ink-500">{tr('about')}</h3>
         <div className="rounded-lg bg-fieldbg px-4 py-3 text-[12px] text-ink-700 ring-1 ring-hairline">
           <div className="flex items-center justify-between">
             <span>TabMind</span>
             <span className="tabular-nums text-ink-500">v{version}</span>
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-ink-500">
-            所有逻辑在本地运行，代码中没有任何网络请求。标签页信息不会离开这台设备。
-          </p>
+          <p className="mt-2 text-[11px] leading-relaxed text-ink-500">{tr('privacy')}</p>
         </div>
       </div>
     </>

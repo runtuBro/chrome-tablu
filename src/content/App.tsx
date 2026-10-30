@@ -44,6 +44,7 @@ export function App() {
   const notice = useStore((s) => s.notice);
   const setNotice = useStore((s) => s.setNotice);
   const themeMode = useStore((s) => s.settings.theme);
+  const heightMode = useStore((s) => s.settings.heightMode);
   const resolvedTheme = useResolvedTheme(themeMode);
 
   // Esc 关闭：用捕获阶段，避免被页面自己的快捷键拦下。
@@ -77,7 +78,12 @@ export function App() {
       }}
     >
       <div
-        className="tm-anim animate-panelIn tm-glass-sheen tm-panel flex max-h-[min(660px,88vh)] min-h-[200px] w-[min(880px,92vw)] flex-col overflow-hidden rounded-xl bg-surface backdrop-blur-lg backdrop-saturate-150"
+        className={[
+          'tm-anim animate-panelIn tm-glass-sheen tm-panel flex w-[min(880px,92vw)] flex-col overflow-hidden rounded-xl bg-surface backdrop-blur-lg backdrop-saturate-150',
+          heightMode === 'fixed'
+            ? 'h-[min(660px,88vh)]'
+            : 'max-h-[min(660px,88vh)] min-h-[200px]',
+        ].join(' ')}
         role="dialog"
         aria-modal="true"
         aria-label="标签页总览"

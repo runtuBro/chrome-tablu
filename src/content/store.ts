@@ -2,7 +2,10 @@ import { create } from 'zustand';
 import {
   DEFAULT_SETTINGS,
   STORAGE_KEYS,
+  type HeightMode,
+  type Lang,
   type Settings,
+  type SortMode,
   type TabItem,
   type ThemeMode,
   type WindowGroup,
@@ -47,6 +50,9 @@ type Store = {
   setVisible: (v: boolean) => void;
   setView: (v: 'list' | 'settings') => void;
   setTheme: (t: ThemeMode) => void;
+  setLanguage: (l: Lang) => void;
+  setHeightMode: (h: HeightMode) => void;
+  setSortMode: (s: SortMode) => void;
   loadSettings: () => Promise<void>;
   loadBookmarks: () => Promise<void>;
   toggleBookmark: (tab: TabItem) => Promise<void>;
@@ -91,6 +97,24 @@ export const useStore = create<Store>((set, get) => ({
 
   setTheme(theme) {
     const settings: Settings = { ...get().settings, theme };
+    set({ settings });
+    chrome.storage?.local?.set({ [STORAGE_KEYS.settings]: settings }).catch(() => {});
+  },
+
+  setLanguage(language) {
+    const settings: Settings = { ...get().settings, language };
+    set({ settings });
+    chrome.storage?.local?.set({ [STORAGE_KEYS.settings]: settings }).catch(() => {});
+  },
+
+  setHeightMode(heightMode) {
+    const settings: Settings = { ...get().settings, heightMode };
+    set({ settings });
+    chrome.storage?.local?.set({ [STORAGE_KEYS.settings]: settings }).catch(() => {});
+  },
+
+  setSortMode(sortMode) {
+    const settings: Settings = { ...get().settings, sortMode };
     set({ settings });
     chrome.storage?.local?.set({ [STORAGE_KEYS.settings]: settings }).catch(() => {});
   },

@@ -65,6 +65,7 @@ async function buildSnapshot(): Promise<WindowGroup[]> {
       audible: !!t.audible,
       discarded: !!t.discarded,
       groupId: typeof t.groupId === 'number' ? t.groupId : NO_GROUP,
+      lastAccessed: typeof t.lastAccessed === 'number' ? t.lastAccessed : 0,
     };
     group.tabs.push(item);
   }

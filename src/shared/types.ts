@@ -36,6 +36,8 @@ export type TabItem = {
   discarded: boolean;
   /** 所属标签组 id，未分组为 -1 */
   groupId: number;
+  /** 最近访问时间戳，Chrome 121+ 提供；不可用时为 0 */
+  lastAccessed: number;
 };
 
 export type WindowGroup = {
@@ -62,13 +64,22 @@ export const GROUP_COLOR_CLASS: Record<TabGroupColor, string> = {
 /* ---------- 设置 ---------- */
 
 export type ThemeMode = 'system' | 'light' | 'dark';
+export type Lang = 'zh' | 'en';
+export type HeightMode = 'auto' | 'fixed';
+export type SortMode = 'default' | 'recent';
 
 export type Settings = {
   theme: ThemeMode;
+  language: Lang;
+  heightMode: HeightMode;
+  sortMode: SortMode;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
+  language: 'zh',
+  heightMode: 'auto',
+  sortMode: 'default',
 };
 
 export const STORAGE_KEYS = {

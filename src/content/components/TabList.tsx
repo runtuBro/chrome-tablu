@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pin, Volume2, X, ChevronRight, Inbox, Settings2, Star } from 'lucide-react';
 import { useStore } from '../store';
+import { t as tr } from '../../shared/i18n';
 import {
   GROUP_COLOR_CLASS,
   NO_GROUP,
   hostOf,
+  type Lang,
+  type SortMode,
   type TabGroupInfo,
   type TabItem,
   type WindowGroup,
@@ -76,11 +79,13 @@ function TabRow({
   highlighted,
   onHover,
   rowRef,
+  lang,
 }: {
   tab: TabItem;
   highlighted: boolean;
   onHover: () => void;
   rowRef: (el: HTMLDivElement | null) => void;
+  lang: Lang;
 }) {
   const activateTab = useStore((s) => s.activateTab);
   const closeTab = useStore((s) => s.closeTab);
@@ -108,7 +113,7 @@ function TabRow({
     >
       <button
         type="button"
-        title={bookmarked ? '取消收藏' : '收藏此标签页'}
+        title={bookmarked ? tr(lang, 'unbookmark') : tr(lang, 'bookmark')}
         onMouseDown={(e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -145,7 +150,7 @@ function TabRow({
 
       <button
         type="button"
-        title="关闭此标签页"
+        title={tr(lang, 'closeTab')}
         onMouseDown={(e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -186,6 +191,7 @@ function buildBlocks(
   groupTotals: Map<number, number>,
   forceOpen: boolean,
   override: Record<number, boolean>,
+  sortMode: SortMode,
 ): Block[] {
   const infoById = new Map(groups.map((g) => [g.id, g]));
   const blocks: Block[] = [];
@@ -194,7 +200,11 @@ function buildBlocks(
 
   const flushLoose = () => {
     if (loose.length) {
-      blocks.push({ kind: 'tabs', key: `loose-${loose[0].id}`, tabs: loose });
+      const arr =
+        sortMode === 'recent'
+          ? [...loose].sort((a, b) => b.lastAccessed - a.lastAccessed)
+          : loose;
+      blocks.push({ kind: 'tabs', key: `loose-${loose[0].id}`, tabs: arr });
       loose = [];
     }
   };
@@ -225,6 +235,9 @@ function buildBlocks(
     }
 
     flushLoose();
+    if (sortMode === 'recent') {
+      groupTabs.sort((a, b) => b.lastAccessed - a.lastAccessed);
+    }
     blocks.push({
       kind: 'group',
       group: info,
@@ -254,6 +267,7 @@ function WindowSection({
   setHighlightId,
   rowRefs,
   onToggleGroup,
+  lang,
 }: {
   group: WindowGroup;
   index: number;
@@ -264,9 +278,10 @@ function WindowSection({
   collapsed: boolean;
   onToggle: () => void;
   highlightId: number | null;
-  setHighlightId: (id: number) => void;
+  setHighlightId: (id: number | null) => void;
   rowRefs: React.MutableRefObject<Map<number, HTMLDivElement>>;
   onToggleGroup: (groupId: number, current: boolean) => void;
+  lang: Lang;
 }) {
   const open = !showHeader || !collapsed;
   // 折叠的组块里那些标签不算"可见"
@@ -289,10 +304,10 @@ function WindowSection({
             size={13}
             className={`shrink-0 text-ink-500 transition-transform ${open ? 'rotate-90' : ''}`}
           />
-          <span className="shrink-0 text-[12px] font-medium text-ink-700">窗口 {index + 1}</span>
+          <span className="shrink-0 text-[12px] font-medium text-ink-700">{tr(lang, 'windowN', { n: index + 1 })}</span>
           {group.focused && (
             <span className="shrink-0 rounded bg-brand-500/15 px-1.5 py-px text-[10px] font-medium text-brand-500">
-              当前
+              {tr(lang, 'current')}
             </span>
           )}
           {activeTitle && (
@@ -321,6 +336,7 @@ function WindowSection({
                   if (el) rowRefs.current.set(tab.id, el);
                   else rowRefs.current.delete(tab.id);
                 }}
+                lang={lang}
               />
             );
 
@@ -354,7 +370,7 @@ function WindowSection({
                       block.group.title ? 'text-ink-700' : 'text-ink-500'
                     }`}
                   >
-                    {block.group.title || '未命名组'}
+                    {block.group.title || tr(lang, 'untitledGroup')}
                   </span>
                   <span className="shrink-0 text-[11px] tabular-nums text-ink-500">
                     {block.count === block.total ? block.count : `${block.count}/${block.total}`}
@@ -386,6 +402,8 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
   const loading = useStore((s) => s.loading);
   const collapsed = useStore((s) => s.collapsed);
   const groupOverride = useStore((s) => s.groupOverride);
+  const language = useStore((s) => s.settings.language);
+  const sortMode = useStore((s) => s.settings.sortMode);
   const toggleWindow = useStore((s) => s.toggleWindow);
   const toggleGroup = useStore((s) => s.toggleGroup);
   const activateTab = useStore((s) => s.activateTab);
@@ -404,10 +422,10 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
         }
         return {
           group,
-          blocks: buildBlocks(group.tabs, group.groups, totals, false, groupOverride),
+          blocks: buildBlocks(group.tabs, group.groups, totals, false, groupOverride, sortMode),
         };
       }),
-    [groups, groupOverride],
+    [groups, groupOverride, sortMode],
   );
 
   // 当前屏幕上真正可见的标签，键盘上下移动只在这上面走
@@ -500,13 +518,13 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
               key={g.id}
               type="button"
               onClick={() => scrollToGroup(g.id)}
-              title={`跳转到「${g.title || '未命名组'}」`}
+              title={tr(language, 'jumpToGroup', { name: g.title || tr(language, 'untitledGroup') })}
               className="flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-ink-700 transition hover:bg-hoverbg"
             >
               <span
                 className={`h-2 w-2 shrink-0 rounded-full ${GROUP_COLOR_CLASS[g.color] ?? 'bg-slate-400'}`}
               />
-              <span className="max-w-[110px] truncate">{g.title || '未命名组'}</span>
+              <span className="max-w-[110px] truncate">{g.title || tr(language, 'untitledGroup')}</span>
             </button>
           ))}
         </div>
@@ -525,14 +543,14 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
       <div ref={scrollRef} className="tm-scroll min-h-0 flex-1 overflow-y-auto px-1 pb-2 pt-2">
         {loading && groups.length === 0 && (
           <div className="flex h-full items-center justify-center text-[13px] text-ink-500">
-            正在读取标签页…
+            {tr(language, 'loadingTabs')}
           </div>
         )}
 
         {!loading && groups.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-ink-500">
             <Inbox size={28} strokeWidth={1.5} />
-            <p className="text-[13px]">当前没有打开的标签页</p>
+            <p className="text-[13px]">{tr(language, 'noTabs')}</p>
           </div>
         )}
 
@@ -551,6 +569,7 @@ export function TabList({ onOpenSettings }: { onOpenSettings: () => void }) {
             setHighlightId={setHighlightId}
             rowRefs={rowRefs}
             onToggleGroup={toggleGroup}
+            lang={language}
           />
         ))}
       </div>
