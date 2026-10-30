@@ -343,7 +343,7 @@ function WindowSection({
             // 连续的未分组标签：直接铺在网格里
             if (block.kind === 'tabs') {
               return (
-                <div key={block.key} className="flex flex-col gap-px">
+                <div key={block.key} className="flex flex-col gap-0.5">
                   {block.tabs.map(renderTab)}
                 </div>
               );
@@ -382,7 +382,7 @@ function WindowSection({
                 </button>
 
                 {!block.collapsed && (
-                  <div className="flex flex-col gap-px">
+                  <div className="flex flex-col gap-0.5">
                     {block.tabs.map(renderTab)}
                   </div>
                 )}
