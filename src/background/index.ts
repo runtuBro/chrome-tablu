@@ -243,10 +243,10 @@ async function flashUnsupported(tabId: number): Promise<void> {
   try {
     await chrome.action.setBadgeBackgroundColor({ tabId, color: '#ef4444' });
     await chrome.action.setBadgeText({ tabId, text: '!' });
-    await chrome.action.setTitle({ tabId, title: `TabMind 无法打开：${reason}` });
+    await chrome.action.setTitle({ tabId, title: `Tablu 无法打开：${reason}` });
     setTimeout(() => {
       chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
-      chrome.action.setTitle({ tabId, title: '打开 TabMind 面板' }).catch(() => {});
+      chrome.action.setTitle({ tabId, title: '打开 Tablu 面板' }).catch(() => {});
     }, 3000);
   } catch {
     /* 标签页可能已经关了 */

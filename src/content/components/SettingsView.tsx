@@ -244,7 +244,7 @@ export function SettingsView({
         <h3 className="mb-2 mt-6 text-[12px] font-medium text-ink-500">{tr('about')}</h3>
         <div className="rounded-lg bg-fieldbg px-4 py-3 text-[12px] text-ink-700 ring-1 ring-hairline">
           <div className="flex items-center justify-between">
-            <span>TabMind</span>
+            <span>Tablu</span>
             <span className="tabular-nums text-ink-500">v{version}</span>
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-ink-500">{tr('privacy')}</p>

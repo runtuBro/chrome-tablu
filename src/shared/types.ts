@@ -83,7 +83,7 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 export const STORAGE_KEYS = {
-  settings: 'tabmind.settings',
+  settings: 'tablu.settings',
 } as const;
 
 /** 从 URL 里取一个可读的域名，取不到就原样返回 */

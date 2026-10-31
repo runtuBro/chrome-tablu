@@ -52,7 +52,7 @@ const dict = {
     shortcutActive: '当前已生效',
     shortcutMissing: '未设置 · 可能与其他扩展或系统快捷键冲突',
     change: '修改',
-    shortcutHint: '点击「修改」会打开 Chrome 自带的快捷键页面，在那里给 TabMind 指定组合键。',
+    shortcutHint: '点击「修改」会打开 Chrome 自带的快捷键页面，在那里给 Tablu 指定组合键。',
 
     // 关于
     about: '关于',

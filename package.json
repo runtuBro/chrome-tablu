@@ -1,9 +1,9 @@
 {
-  "name": "tabmind",
+  "name": "tablu",
   "private": true,
-  "version": "0.9.3",
+  "version": "0.9.4",
   "type": "module",
-  "description": "TabMind - 浏览器标签页总览面板",
+  "description": "Tablu - 浏览器标签页总览面板",
   "scripts": {
     "build:content": "ENTRY=content vite build -c vite.ext.config.ts",
     "build:bg": "ENTRY=background vite build -c vite.ext.config.ts",

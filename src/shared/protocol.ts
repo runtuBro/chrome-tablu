@@ -34,7 +34,7 @@ export type BackgroundMessage = { type: 'TOGGLE_PANEL' } | { type: 'OPEN_PANEL' 
 /* ---------- 长连接 Port ---------- */
 
 /** 面板快照通道的 port 名，两侧共用，避免拼错 */
-export const PANEL_PORT = 'tabmind-panel';
+export const PANEL_PORT = 'tablu-panel';
 
 /** Port 上传输的消息（与一次性 sendMessage 的响应区分开） */
 export type PortMessage = { type: 'TABS_SNAPSHOT'; groups: WindowGroup[] };

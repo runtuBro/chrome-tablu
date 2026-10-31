@@ -1,15 +1,24 @@
 {
   "manifest_version": 3,
-  "name": "TabMind",
-  "version": "0.9.3",
+  "name": "Tablu - 标签页总览",
+  "version": "0.9.4",
   "description": "一键纵览所有窗口与标签页，点一下即可跳转。",
   "minimum_chrome_version": "110",
-  "permissions": ["tabs", "windows", "favicon", "scripting", "activeTab", "tabGroups", "storage", "bookmarks"],
+  "permissions": [
+    "tabs",
+    "windows",
+    "favicon",
+    "scripting",
+    "activeTab",
+    "tabGroups",
+    "storage",
+    "bookmarks"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "打开 TabMind 面板",
+    "default_title": "打开 Tablu 面板",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -29,13 +38,17 @@
         "default": "Alt+Shift+K",
         "mac": "Alt+Space"
       },
-      "description": "打开 / 关闭 TabMind 面板"
+      "description": "打开 / 关闭 Tablu 面板"
     }
   },
   "web_accessible_resources": [
     {
-      "resources": ["_favicon/*"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "_favicon/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

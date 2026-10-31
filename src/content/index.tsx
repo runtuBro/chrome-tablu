@@ -4,7 +4,7 @@ import { App } from './App';
 import { useStore } from './store';
 import type { BackgroundMessage } from '../shared/protocol';
 
-const HOST_ID = '__tabmind_host__';
+const HOST_ID = '__tablu_host__';
 
 /**
  * 把面板挂到页面里。
@@ -53,7 +53,7 @@ function mount(): void {
  * 第二次执行会注册第二个 onMessage 监听器，一次 TOGGLE 被处理两次，
  * 表现为「面板闪一下就关」。
  */
-const BOOT_FLAG = '__tabmind_booted__';
+const BOOT_FLAG = '__tablu_booted__';
 
 function boot(): void {
   if ((window as unknown as Record<string, unknown>)[BOOT_FLAG]) return;
