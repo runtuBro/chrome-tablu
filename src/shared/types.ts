@@ -78,7 +78,7 @@ export type Settings = {
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   language: 'zh',
-  heightMode: 'auto',
+  heightMode: 'fixed',
   sortMode: 'default',
 };
 
