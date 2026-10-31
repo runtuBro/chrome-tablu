@@ -47,8 +47,8 @@ Tablu 把全部窗口摊开成一张纵向清单，并且**保留你自己建的
 **从源码加载**：
 
 ```bash
-git clone https://github.com/runtuBro/chrome-tabmind.git
-cd chrome-tabmind
+git clone https://github.com/runtuBro/chrome-tablu.git
+cd chrome-tablu
 npm install && npm run build
 ```
 

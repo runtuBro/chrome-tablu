@@ -4,6 +4,14 @@
   "version": "0.9.5",
   "type": "module",
   "description": "Tablu - 浏览器标签页总览面板",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/runtuBro/chrome-tablu.git"
+  },
+  "homepage": "https://github.com/runtuBro/chrome-tablu#readme",
+  "bugs": {
+    "url": "https://github.com/runtuBro/chrome-tablu/issues"
+  },
   "scripts": {
     "build:content": "ENTRY=content vite build -c vite.ext.config.ts",
     "build:bg": "ENTRY=background vite build -c vite.ext.config.ts",
