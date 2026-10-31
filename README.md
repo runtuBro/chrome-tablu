@@ -12,6 +12,20 @@
 
 TabMind 把全部窗口摊开成一张纵向清单，并且**保留你自己建的标签组**——组的颜色、名字、折叠状态都跟着 Chrome 走，不做任何重新组织。
 
+## 两种形态
+
+同一套界面，两种打开方式，内容完全一致：
+
+| | 浮层（默认） | 独立页 |
+|---|---|---|
+| 怎么来 | 在普通网页点图标或按快捷键 | 在 `chrome://`、应用商店这类**禁止注入**的页面点图标 |
+| 长什么样 | 页面中央的毛玻璃浮层 | 一个标签页，铺满窗口 |
+| 怎么关 | `Esc` 或点面板外遮罩 | `Esc` 或点任意标签（这个标签页会自己关掉） |
+
+浏览器不允许扩展往 `chrome://` 开头的页面注入脚本。与其只弹一个错误提示，不如换个地方把同样的内容给你看——扩展自己的页面不受这个限制，也不需要任何额外权限。
+
+![独立面板页](docs/images/screenshot-page.png)
+
 ## 功能
 
 | 功能 | 操作 |
@@ -26,7 +40,6 @@ TabMind 把全部窗口摊开成一张纵向清单，并且**保留你自己建�
 | 多窗口 | 按窗口分组；单窗口时自动隐藏窗口标题，多窗口时标题附带活动标签名 |
 | 深色模式 | 跟随系统 / 浅色 / 深色 |
 | 设置 | 外观、语言（中文 / English）、面板高度、排序方式、快捷键状态、版本信息 |
-| 受限页面上使用 | 在 `chrome://` 等禁止注入的页面点击图标，改为打开独立面板标签页（同样能看全部标签、跳转、收藏） |
 
 ## 安装
 
@@ -70,10 +83,10 @@ npm run build
 
 > `Option+Space` 在 macOS 上原本是输入不间断空格（NBSP）的组合键，被扩展占用后在 Chrome 里不再输入 NBSP。介意的话换成 `⌥K` 之类的组合。
 
-## 使用注意
+## 使用提示
 
-- 在 `chrome://` 开头的页面（包括**扩展管理页**和**新标签页**）、Chrome 应用商店页面，浏览器禁止扩展注入脚本。此时点击图标会**改为打开一个独立的面板标签页**，内容与浮层一致；用完按 `Esc` 或点任意标签，该页会自动关闭。
 - 面板是**点击时才注入**的：页面加载时扩展什么都不做，所以开多少标签页都不会拖慢浏览器。第一次点击有约 20-30ms 的脚本解析，之后同一页面再点就是瞬开。
+- 扩展没固定到工具栏时，图标会藏在拼图菜单里，快捷键失效或注入失败都不容易被发现——**建议先固定到工具栏**。
 - 修改代码后：`npm run build` → 在 `chrome://extensions` 点该扩展的刷新按钮 → 刷新网页。
 
 ## 权限
@@ -95,17 +108,23 @@ npm run build
 ## 开发
 
 ```bash
-npm run build       # 构建到 dist/
+npm run build       # 三段构建，产物进 dist/
 npm run typecheck   # 类型检查
 npm run watch       # content 改动时增量重建
+
+npm run build:content   # 只重建注入到页面的面板
+npm run build:bg        # 只重建 service worker
+npm run build:panel     # 只重建独立面板页
 ```
 
 ## 目录
 
 ```
 public/manifest.json   MV3 清单
-src/background/        Service Worker：读标签页、广播变化
+public/panel.html      独立面板页的 HTML 壳
+src/background/        Service Worker：读标签页、推快照
 src/content/           注入到页面的面板（React + Shadow DOM）
+src/panel/             独立面板页入口（复用同一套 App）
 src/shared/            两端共用的类型、消息协议、i18n
 scripts/make-icons.mjs 纯 Node 生成图标
 docs/images/           README 展示图
@@ -115,7 +134,19 @@ docs/images/           README 展示图
 
 Manifest V3 · TypeScript · Vite · React 18 · Tailwind CSS 3 · Zustand
 
-两个不太常见的设计决定：
+几个不太常见的设计决定：
 
 - **按需注入**：manifest 里不声明 `content_scripts`，点击时才用 `scripting.executeScript` 注入当前页。开 20 个标签页 = 0 份 React 运行时。
+- **没有 `host_permissions`**：靠 `activeTab` 拿点击时的临时授权。权限提示是"仅点击时访问当前页面"，不是"读取所有网站数据"。
+- **数据是推的，不是轮询的**：background 监听 8 类标签页事件，180ms 防抖后通过长连接 Port 推快照。MV3 的 service worker 会被回收，Port 断开时面板自动重连并补一份最新快照，所以列表不会静默变旧。
 - **颜色走 CSS 变量**：`bg-surface` / `text-ink-500` / `border-hairline` 映射到变量，切主题只换一组值，组件里没有一处 `dark:` 变体。
+- **一份 CSS 两处挂载**：content script 把样式塞进 shadow root，独立页塞进 `document.head`。同一份文件，两种隔离方式。
+
+## 已知限制
+
+| 限制 | 原因 |
+|---|---|
+| `chrome://`、应用商店、PDF 查看器里无法显示浮层 | 浏览器禁止注入特权页，改为打开独立面板页 |
+| `file://` 页面需要手动开启「允许访问文件网址」 | Chrome 的默认安全策略 |
+| 快捷键必须在 `chrome://extensions/shortcuts` 里改 | 扩展无法用代码设置自己的快捷键 |
+| 面板打开时若有 30 秒以上完全无操作，列表可能暂停更新 | MV3 回收 service worker；Port 断开后会自动重连并补发快照，通常感知不到 |
