@@ -60,6 +60,9 @@
   --tm-overlay-bg: 15 23 42;
   --tm-overlay-a: 0.35;
 
+  /* 独立页面（panel.html）的页面底色。比面板略深一档，让面板浮起来 */
+  --tm-page-bg: 238 240 244;
+
   /* 面板轮廓：浅色靠细边框，深色靠顶部受光（见下方覆盖） */
   --tm-panel-shadow:
     0 0 0 1px rgba(15, 23, 42, 0.06),
@@ -141,6 +144,8 @@
   --tm-overlay-bg: 2 6 23;
   --tm-overlay-a: 0.62;
 
+  --tm-page-bg: 8 12 22;
+
   --tm-panel-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.11),
     0 0 0 1px rgba(255, 255, 255, 0.06),
@@ -154,6 +159,30 @@
 /* 面板轮廓与受光 */
 .tm-panel {
   box-shadow: var(--tm-panel-shadow);
+}
+
+/* ------------------------------------------------------------------ *
+ * 独立页面模式（panel.html）
+ *
+ * 复用同一套变量和同一个 App，只把"遮罩"的语义换成"整页容器"：
+ * 铺满视口、不模糊、不透明、始终可见，并给面板留出 24px 呼吸边距。
+ * ------------------------------------------------------------------ */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.tm-overlay.tm-page {
+  background: rgb(var(--tm-page-bg));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: none;
+  padding: 24px;
 }
 
 /* 面板上沿的一道高光，玻璃质感靠它撑起来 */

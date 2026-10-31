@@ -14,6 +14,7 @@ const rootDir = fileURLToPath(new URL('.', import.meta.url));
 const ENTRIES = {
   content: { input: 'src/content/index.tsx', file: 'content.js', name: 'TabMindContent' },
   background: { input: 'src/background/index.ts', file: 'background.js', name: 'TabMindBg' },
+  panel: { input: 'src/panel/index.tsx', file: 'panel.js', name: 'TabMindPanel' },
 } as const;
 
 type EntryKey = keyof typeof ENTRIES;

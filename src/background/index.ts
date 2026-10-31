@@ -46,8 +46,12 @@ async function buildSnapshot(): Promise<WindowGroup[]> {
     map.set(w.id, { windowId: w.id, focused: !!w.focused, tabs: [], groups: [] });
   }
 
+  // 独立面板页本身也是标签页，但它不该出现在自己的列表里
+  const ownPanelUrl = chrome.runtime.getURL('panel.html');
+
   for (const t of tabs) {
     if (t.id == null || t.windowId == null) continue;
+    if (t.url === ownPanelUrl) continue;
     let group = map.get(t.windowId);
     if (!group) {
       group = { windowId: t.windowId, focused: false, tabs: [], groups: [] };
@@ -190,6 +194,16 @@ async function togglePanelOn(tabId: number): Promise<void> {
     if (await trySendToggle(tabId)) return;
   } catch {
     // 特权页（chrome://、应用商店、PDF 查看器）会在这里被拒
+  }
+
+  // ③ 注入不了（chrome:// 这类页面）→ 改为打开独立面板页。
+  //    扩展页面本身就是扩展的一部分，不受注入限制，也不需要额外权限。
+  //    往新开的普通网页注入是不行的：activeTab 只授权点击时所在的那个标签页。
+  try {
+    await chrome.tabs.create({ url: chrome.runtime.getURL('panel.html') });
+    return;
+  } catch {
+    // 连新标签页都开不了，只能退回到图标提示
   }
 
   await flashUnsupported(tabId);

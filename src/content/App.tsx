@@ -36,7 +36,13 @@ function useResolvedTheme(mode: ThemeMode): 'light' | 'dark' {
   return resolved;
 }
 
-export function App() {
+/**
+ * 面板外壳。
+ *
+ * standalone = true 时用于独立页面（panel.html）：铺满视口、没有遮罩、
+ * 不响应"点外部关闭"。内容与交互完全一致，只是外壳不同。
+ */
+export function App({ standalone = false }: { standalone?: boolean }) {
   const visible = useStore((s) => s.visible);
   const view = useStore((s) => s.view);
   const setView = useStore((s) => s.setView);
@@ -49,6 +55,7 @@ export function App() {
 
   // Esc 关闭：用捕获阶段，避免被页面自己的快捷键拦下。
   // 在设置视图里，Esc 先退回列表，再按一次才关闭。
+  // 独立页里"关闭"= 关闭标签页，由 panel/index.tsx 订阅 visible 处理。
   useEffect(() => {
     if (!visible) return;
     const onKey = (e: KeyboardEvent) => {
@@ -67,23 +74,37 @@ export function App() {
     if (visible) setNotice(null);
   }, [visible, setNotice]);
 
+  const panelSize = standalone
+    ? // 页面模式：始终占满可用高度，不受"面板高度"设置影响
+      // （页面上留白会显得像加载失败）
+      'h-[calc(100vh-48px)] w-full max-w-[845px]'
+    : [
+        'w-[min(845px,92vw)]',
+        heightMode === 'fixed'
+          ? 'h-[min(660px,88vh)]'
+          : 'max-h-[min(660px,88vh)] min-h-[200px]',
+      ].join(' ');
+
   return (
     <div
-      className={`tm-overlay${visible ? ' is-open' : ''}`}
+      className={
+        standalone
+          ? 'tm-overlay tm-page is-open'
+          : `tm-overlay${visible ? ' is-open' : ''}`
+      }
       data-theme={resolvedTheme}
       onMouseDown={(e) => {
+        if (standalone) return;
         if (e.target === e.currentTarget) setVisible(false);
       }}
     >
       <div
         className={[
-          'tm-panel-anim tm-glass-sheen tm-panel flex w-[min(845px,92vw)] flex-col overflow-hidden rounded-xl bg-surface backdrop-blur-lg backdrop-saturate-150',
-          heightMode === 'fixed'
-            ? 'h-[min(660px,88vh)]'
-            : 'max-h-[min(660px,88vh)] min-h-[200px]',
+          'tm-glass-sheen tm-panel flex flex-col overflow-hidden rounded-xl bg-surface backdrop-blur-lg backdrop-saturate-150',
+          standalone ? panelSize : `tm-panel-anim ${panelSize}`,
         ].join(' ')}
-        role="dialog"
-        aria-modal="true"
+        role={standalone ? 'main' : 'dialog'}
+        aria-modal={standalone ? undefined : true}
         aria-label="标签页总览"
       >
         {view === 'settings' ? (

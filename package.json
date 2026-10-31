@@ -1,15 +1,16 @@
 {
   "name": "tabmind",
   "private": true,
-  "version": "0.8.4",
+  "version": "0.9.0",
   "type": "module",
   "description": "TabMind - 浏览器标签页总览面板",
   "scripts": {
     "build:content": "ENTRY=content vite build -c vite.ext.config.ts",
     "build:bg": "ENTRY=background vite build -c vite.ext.config.ts",
-    "build": "npm run build:content && npm run build:bg",
+    "build": "npm run build:content && npm run build:bg && npm run build:panel",
     "typecheck": "tsc --noEmit",
-    "watch": "ENTRY=content vite build -c vite.ext.config.ts --watch"
+    "watch": "ENTRY=content vite build -c vite.ext.config.ts --watch",
+    "build:panel": "ENTRY=panel vite build -c vite.ext.config.ts"
   },
   "dependencies": {
     "lucide-react": "^0.446.0",
