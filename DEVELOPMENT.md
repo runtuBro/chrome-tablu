@@ -136,3 +136,15 @@ await cdp.send('ServiceWorker.stopAllWorkers');
 ## 提交约定
 
 提交信息写清楚**做了什么**和**为什么**，不要只写"update"。视觉调整要说明改了哪个值、为什么改。
+
+## 发布到商店
+
+```bash
+npm run package    # 构建 + 打包，产出 tablu-<version>.zip
+```
+
+压缩包里的 `manifest.json` 必须位于**根目录**（不能是 `dist/manifest.json`），否则后台上传会报无效包。脚本已经处理了这一点。
+
+后台要填的文案、权限理由、图片素材清单见 [`store/listing.md`](store/listing.md)，隐私政策在 [`PRIVACY.md`](PRIVACY.md)。
+
+**注意**：隐私政策需要一个公网可访问的链接，所以仓库必须先转为 public，审核时才能打开这个地址。

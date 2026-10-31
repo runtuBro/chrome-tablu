@@ -8,6 +8,9 @@ dist/
 # （docs/images/ 下的展示图仍会被跟踪，README 引用它们）
 docs/*.md
 
+# 商店提交包（npm run package 生成）
+*.zip
+
 # 日志与系统文件
 *.log
 .DS_Store

@@ -18,7 +18,8 @@
     "build": "npm run build:content && npm run build:bg && npm run build:panel",
     "typecheck": "tsc --noEmit",
     "watch": "ENTRY=content vite build -c vite.ext.config.ts --watch",
-    "build:panel": "ENTRY=panel vite build -c vite.ext.config.ts"
+    "build:panel": "ENTRY=panel vite build -c vite.ext.config.ts",
+    "package": "npm run build && cd dist && rm -f ../tablu-$npm_package_version.zip && zip -qr ../tablu-$npm_package_version.zip . && echo 打包完成: tablu-$npm_package_version.zip"
   },
   "dependencies": {
     "lucide-react": "^0.446.0",
