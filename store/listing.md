@@ -101,6 +101,6 @@ To present all tabs across every window and tab group in a single panel, so the 
 
 - [ ] 仓库已转为 public（否则隐私政策链接打不开，审核会卡）
 - [ ] `npm run build` 产物与 manifest 版本号一致
-- [ ] 打包：`cd dist && zip -r ../tablu-0.9.5.zip .`（manifest 必须在压缩包根目录）
+- [ ] 打包：`npm run package`（产出 `tablu-<版本>.zip`，manifest 已在压缩包根目录）
 - [ ] 后台确认版本号、权限列表与预期一致
 - [ ] 上传后先看一遍自动检查给出的警告（通常与权限描述有关）
